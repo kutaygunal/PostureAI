@@ -525,12 +525,6 @@ struct EnhancedBottomPanel: View {
                         continueButtonScale = 1.0
                     }
                 }
-            } else {
-                // Show scanning status instead of duplicate progress
-                ScanningStatusView(
-                    status: viewModel.scanStatus,
-                    currentMode: viewModel.currentMode
-                )
             }
             
             Color.clear.frame(height: 20)
@@ -550,54 +544,6 @@ struct EnhancedBottomPanel: View {
             )
             .ignoresSafeArea(.container, edges: .bottom)
         )
-    }
-}
-
-// MARK: - Scanning Status View (Replaces duplicate CaptureProgressView)
-
-struct ScanningStatusView: View {
-    let status: ScanStatus
-    let currentMode: ScanMode
-    
-    var body: some View {
-        HStack(spacing: 8) {
-            Image(systemName: currentMode == .front ? "person.fill" : "arrow.left.arrow.right")
-                .font(.system(size: 16))
-                .foregroundColor(.white.opacity(0.7))
-            
-            Text(statusMessage)
-                .font(.system(size: 15, weight: .medium))
-                .foregroundColor(.white.opacity(0.9))
-        }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 12)
-        .background(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(.ultraThinMaterial)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .stroke(Color.white.opacity(0.1), lineWidth: 1)
-                )
-        )
-    }
-    
-    private var statusMessage: String {
-        switch status {
-        case .noDetection:
-            return "Position body in frame"
-        case .moveCloser:
-            return "Move closer"
-        case .moveBack:
-            return "Move back"
-        case .detectedHoldStill:
-            return "Hold still..."
-        case .captured:
-            return "Captured!"
-        case .turnToSide, .turnMoreToSide:
-            return "Turn to side view"
-        case .sideViewGood:
-            return "Hold still..."
-        }
     }
 }
 
