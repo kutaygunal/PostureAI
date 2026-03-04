@@ -4,6 +4,12 @@ import Combine
 @main
 struct PostureAIApp: App {
     @StateObject private var appState = AppState()
+    
+    init() {
+        // Eagerly initialize audio manager to eliminate first-use delay
+        // This pre-warms the speech synthesizer and audio session
+        AudioManager.shared.prewarm()
+    }
 
     var body: some Scene {
         WindowGroup {

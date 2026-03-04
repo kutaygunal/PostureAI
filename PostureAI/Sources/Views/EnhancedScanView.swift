@@ -19,6 +19,7 @@ struct EnhancedScanView: View {
     
     // Navigation state
     @State private var showResults = false
+    @State private var showHeightInput = false
     
     init() {
         let cm = CameraManager()
@@ -88,7 +89,7 @@ struct EnhancedScanView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     
                     // Bottom panel
-                    EnhancedBottomPanel(viewModel: viewModel, showResults: $showResults)
+                    EnhancedBottomPanel(viewModel: viewModel, showHeightInput: $showHeightInput)
                         .offset(y: bottomPanelOffset)
                 }
             }
@@ -112,6 +113,19 @@ struct EnhancedScanView: View {
         .navigationDestination(isPresented: $showResults) {
             EnhancedReportView()
                 .environmentObject(appState)
+        }
+        .sheet(isPresented: $showHeightInput) {
+            HeightInputSheet {
+                showHeightInput = false
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                    showResults = true
+                }
+            }
+            .environmentObject(appState)
+            .presentationDetents([.large])
+            .presentationDragIndicator(.hidden)
+            .presentationBackground(Color(red: 0.08, green: 0.08, blue: 0.1))
+            .interactiveDismissDisabled()
         }
         .task {
             await setupCamera()
@@ -517,7 +531,7 @@ struct EnhancedStatusBadge: View {
 
 struct EnhancedBottomPanel: View {
     @ObservedObject var viewModel: ScanViewModel
-    @Binding var showResults: Bool
+    @Binding var showHeightInput: Bool
     @State private var continueButtonScale: CGFloat = 1.0
     
     var body: some View {
@@ -533,7 +547,7 @@ struct EnhancedBottomPanel: View {
             if viewModel.frontCaptured && viewModel.sideCaptured {
                 Button(action: {
                     HapticManager.shared.successFeedback()
-                    showResults = true
+                    showHeightInput = true
                 }) {
                     HStack(spacing: 8) {
                         Text("View Results")

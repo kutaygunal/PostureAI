@@ -19,7 +19,36 @@ class AudioManager {
     // Turkish speech synthesizer
     private let synthesizer = AVSpeechSynthesizer()
     
-    private init() {}
+    private init() {
+        // Eagerly initialize audio session to avoid first-use delay
+        prewarmAudioSession()
+    }
+    
+    /// Pre-warm the audio system to eliminate initialization delays during countdown
+    private func prewarmAudioSession() {
+        // Pre-warm speech synthesizer with a silent utterance
+        // This ensures the synthesizer is ready when needed
+        let warmupUtterance = AVSpeechUtterance(string: " ")
+        warmupUtterance.volume = 0.001
+        warmupUtterance.rate = 0.5
+        synthesizer.speak(warmupUtterance)
+        synthesizer.stopSpeaking(at: .immediate)
+        
+        // Ensure audio session is configured for playback
+        do {
+            let audioSession = AVAudioSession.sharedInstance()
+            try audioSession.setCategory(.playback, mode: .default, options: [.mixWithOthers])
+            try audioSession.setActive(true)
+        } catch {
+            print("Audio session prewarm failed: \(error)")
+        }
+    }
+    
+    /// Explicitly prewarm audio - call this early in app lifecycle for best performance
+    func prewarm() {
+        // Already warmed in init, but this method allows explicit early initialization
+        // if called from App init before first use
+    }
     
     /// Play countdown sound for specific number (3, 2, or 1)
     /// Uses ascending pitch: 3=low, 2=medium, 1=high
