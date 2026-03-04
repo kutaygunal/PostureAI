@@ -291,6 +291,7 @@ class ScanViewModel: ObservableObject {
         cancelAllTasks()
         frontCaptured = false
         sideCaptured = false
+        currentMode = .front
         state = .scanning
         stabilityTracker.reset()
         scanStatus = .noDetection

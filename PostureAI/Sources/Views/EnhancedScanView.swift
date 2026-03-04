@@ -45,6 +45,19 @@ struct EnhancedScanView: View {
                 CameraLoadingView()
             }
             
+            // MARK: - Full screen skeleton overlay
+            if let pose = poseEstimator.currentPose {
+                EnhancedSkeletonOverlayView(pose: pose)
+                    .ignoresSafeArea()
+                    .allowsHitTesting(false)
+                    .opacity(skeletonOpacity)
+                    .onAppear {
+                        withAnimation(.easeOut(duration: 0.5)) {
+                            skeletonOpacity = 1
+                        }
+                    }
+            }
+            
             // MARK: - Scanning animations
             if cameraManager.isConfigured && !showSuccessAnimation {
                 ScanningAnimationView(
@@ -74,17 +87,6 @@ struct EnhancedScanView: View {
                         EnhancedSilhouetteGuideView(scanStatus: viewModel.scanStatus)
                             .scaleEffect(statusScale)
                             .animation(.spring(response: 0.4, dampingFraction: 0.7), value: isBodyDetected)
-                        
-                        // Skeleton overlay with fade
-                        if let pose = poseEstimator.currentPose {
-                            EnhancedSkeletonOverlayView(pose: pose)
-                                .opacity(skeletonOpacity)
-                                .onAppear {
-                                    withAnimation(.easeOut(duration: 0.5)) {
-                                        skeletonOpacity = 1
-                                    }
-                                }
-                        }
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     

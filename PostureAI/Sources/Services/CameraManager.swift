@@ -218,13 +218,18 @@ extension CameraManager: AVCapturePhotoCaptureDelegate {
     func photoOutput(_ output: AVCapturePhotoOutput, didFinishProcessingPhoto photo: AVCapturePhoto, error: Error?) {
         guard error == nil,
               let imageData = photo.fileDataRepresentation(),
-              let image = UIImage(data: imageData) else {
+              var image = UIImage(data: imageData) else {
             DispatchQueue.main.async {
                 self.capturedImage = nil
                 self.onPhotoCaptured?(nil)
                 self.onPhotoCaptured = nil
             }
             return
+        }
+        
+        // Mirror the image horizontally for front camera to match pose data
+        if currentPosition == .front {
+            image = image.flippedHorizontally() ?? image
         }
 
         DispatchQueue.main.async {

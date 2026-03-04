@@ -9,6 +9,7 @@ enum EnhancedViewMode {
 
 struct EnhancedReportView: View {
     @EnvironmentObject var appState: AppState
+    @Environment(\.dismiss) private var dismiss
     @State private var selectedViewMode: EnhancedViewMode = .side
     @State private var selectedCard: Int? = nil
     @State private var headerOffset: CGFloat = -50
@@ -76,6 +77,7 @@ struct EnhancedReportView: View {
                 // Action Buttons
                 ActionButtonsSection {
                     appState.reset()
+                    dismiss()
                 }
                 .padding(.bottom, 32)
             }
