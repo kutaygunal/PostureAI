@@ -387,9 +387,6 @@ struct EnhancedSilhouetteGuideView: View {
                     .frame(width: frameWidth, height: frameHeight)
                     .shadow(color: statusColor.opacity(0.6), radius: isDetecting ? 20 : 8)
                     
-                // Corner brackets
-                CornerBrackets(width: frameWidth, height: frameHeight, color: statusColor)
-                
                 // Status badge
                 EnhancedStatusBadge(status: scanStatus)
                     .position(x: geometry.size.width / 2, y: 35)
@@ -432,58 +429,6 @@ struct EnhancedSilhouetteGuideView: View {
         default:
             return .white
         }
-    }
-}
-
-// MARK: - Corner Brackets
-
-struct CornerBrackets: View {
-    let width: CGFloat
-    let height: CGFloat
-    let color: Color
-    @State private var isAnimating = false
-    
-    var body: some View {
-        ZStack {
-            // Top left
-            CornerBracket()
-                .stroke(color, lineWidth: 3)
-                .frame(width: 30, height: 30)
-                .position(x: 15, y: 15)
-            
-            // Top right
-            CornerBracket()
-                .stroke(color, lineWidth: 3)
-                .rotationEffect(.degrees(90))
-                .frame(width: 30, height: 30)
-                .position(x: width - 15, y: 15)
-            
-            // Bottom right
-            CornerBracket()
-                .stroke(color, lineWidth: 3)
-                .rotationEffect(.degrees(180))
-                .frame(width: 30, height: 30)
-                .position(x: width - 15, y: height - 15)
-            
-            // Bottom left
-            CornerBracket()
-                .stroke(color, lineWidth: 3)
-                .rotationEffect(.degrees(270))
-                .frame(width: 30, height: 30)
-                .position(x: 15, y: height - 15)
-        }
-        .frame(width: width, height: height)
-    }
-}
-
-struct CornerBracket: Shape {
-    func path(in rect: CGRect) -> Path {
-        var path = Path()
-        let length: CGFloat = min(rect.width, rect.height) * 0.7
-        path.move(to: CGPoint(x: 0, y: length))
-        path.addLine(to: CGPoint(x: 0, y: 0))
-        path.addLine(to: CGPoint(x: length, y: 0))
-        return path
     }
 }
 
