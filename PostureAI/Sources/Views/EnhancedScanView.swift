@@ -96,6 +96,7 @@ struct EnhancedScanView: View {
             // MARK: - Countdown overlay
             if let countdown = viewModel.countdownValue {
                 EnhancedCountdownOverlay(count: countdown)
+                    .id("countdown-\(countdown)") // Force recreation for each number
             }
             
             // MARK: - Success celebration
@@ -595,7 +596,7 @@ struct ScanningStatusView: View {
     
     var body: some View {
         HStack(spacing: 8) {
-            Image(systemName: currentMode == .front ? "person.fill" : "person.side.fill")
+            Image(systemName: currentMode == .front ? "person.fill" : "arrow.left.arrow.right")
                 .font(.system(size: 16))
                 .foregroundColor(.white.opacity(0.7))
             
@@ -657,7 +658,7 @@ struct EnhancedModeSelector: View {
             
             EnhancedModeButton(
                 title: "Side",
-                icon: "person.side.fill",
+                icon: "arrow.left.arrow.right",
                 isSelected: currentMode == .side,
                 isCompleted: sideCaptured
             ) {
@@ -791,6 +792,7 @@ struct CountdownRing: View {
                     progress = 1
                 }
             }
+            .id("ring-\(count)") // Force recreation for each number
     }
 }
 

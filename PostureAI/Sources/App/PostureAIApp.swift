@@ -13,6 +13,7 @@ struct PostureAIApp: App {
     }
 }
 
+@MainActor
 class AppState: ObservableObject {
     @Published var hasCompletedOnboarding: Bool {
         didSet {

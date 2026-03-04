@@ -3,6 +3,7 @@ import CoreGraphics
 import Combine
 import AVFoundation
 
+@MainActor
 class PoseEstimator: ObservableObject {
     @Published var currentPose: PoseData?
     @Published var isDetecting = false

@@ -36,6 +36,7 @@ class ScanViewModel: ObservableObject {
     private var state: State = .scanning
     private var countdownTask: Task<Void, Never>?
     private var cooldownTask: Task<Void, Never>?
+    private var cancellables = Set<AnyCancellable>()
     
     var onFrontCaptured: ((URL, PoseData) -> Void)?
     var onSideCaptured: ((URL, PoseData) -> Void)?
@@ -49,19 +50,24 @@ class ScanViewModel: ObservableObject {
     
     // MARK: - Frame Processing
     private func setupFrameProcessing() {
-        cameraManager.onFrameCaptured = { [weak self] sampleBuffer in
-            Task { @MainActor in
-                guard let self = self else { return }
-                
-                // Always process the frame through pose estimator
-                self.poseEstimator.processFrame(sampleBuffer)
-                
-                // But only handle pose logic when scanning
+        // Capture reference to avoid @MainActor isolation issues in closure
+        let poseEstimator = self.poseEstimator
+        
+        cameraManager.onFrameCaptured = { sampleBuffer in
+            // Vision processing runs on videoOutputQueue (background) — never blocks UI
+            poseEstimator.processFrame(sampleBuffer)
+        }
+        
+        // React to pose updates on main thread for scanning logic
+        poseEstimator.$currentPose
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in
+                guard let self else { return }
                 if case .scanning = self.state {
                     self.handleScanningFrame()
                 }
             }
-        }
+            .store(in: &cancellables)
     }
     
     // MARK: - Scanning Logic
@@ -141,55 +147,39 @@ class ScanViewModel: ObservableObject {
     
     // MARK: - Countdown Sequence
     private func beginCountdown() {
-        // Guard: only start from scanning state
         guard case .scanning = state else { return }
         
-        // Transition to counting state with value 3
+        // Set UI state first, then audio - ensures animation starts before sound
         state = .counting(3)
         countdownValue = 3
         
-        // Start async countdown sequence
-        countdownTask = Task { @MainActor in
-            await self.runCountdownSequence()
+        // Small delay ensures view has appeared before audio plays
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+            AudioManager.shared.playCountdown(number: 3)
         }
-    }
-    
-    private func runCountdownSequence() async {
-        // Initial "3"
-        AudioManager.shared.playCountdown(number: 3)
         
-        // Countdown loop: 3 -> 2 -> 1 -> capture
-        for count in [2, 1] {
-            // Wait 1 second
-            do {
-                try await Task.sleep(nanoseconds: 1_000_000_000)
-            } catch {
-                return // Task cancelled
+        countdownTask = Task { @MainActor in
+            // 3 is already showing; wait then show 2, then 1
+            for number in [2, 1] {
+                do {
+                    try await Task.sleep(nanoseconds: 1_000_000_000)
+                } catch { return }
+                guard case .counting = self.state else { return }
+                
+                self.state = .counting(number)
+                self.countdownValue = number
+                AudioManager.shared.playCountdown(number: number)
             }
             
-            // Check if we should continue
-            guard case .counting = state else { return }
+            // Wait final second then capture
+            do {
+                try await Task.sleep(nanoseconds: 1_000_000_000)
+            } catch { return }
+            guard case .counting = self.state else { return }
             
-            // Update state and UI
-            state = .counting(count)
-            countdownValue = count
-            
-            // Play sound
-            AudioManager.shared.playCountdown(number: count)
+            self.countdownValue = nil
+            await self.performCapture()
         }
-        
-        // Wait final second before capture
-        do {
-            try await Task.sleep(nanoseconds: 1_000_000_000)
-        } catch {
-            return
-        }
-        
-        // Check state one last time
-        guard case .counting = state else { return }
-        
-        // Transition to capturing
-        await performCapture()
     }
     
     // MARK: - Capture
@@ -209,26 +199,19 @@ class ScanViewModel: ObservableObject {
         try? await Task.sleep(nanoseconds: 100_000_000)
         AudioManager.shared.playShutter()
         
-        // Take photo and wait for completion
-        await withCheckedContinuation { continuation in
+        // Take photo and wait for result
+        let capturedImage: UIImage? = await withCheckedContinuation { continuation in
             cameraManager.capturePhoto { image in
-                continuation.resume()
+                continuation.resume(returning: image)
             }
         }
         
-        // Now save the captured image with pose data
-        await saveCapturedImage(capturedPose: capturedPose)
+        // Save the captured image with pose data
+        await saveCapturedImage(image: capturedImage, capturedPose: capturedPose)
     }
     
-    private func saveCapturedImage(capturedPose: PoseData?) async {
-        // Wait a moment for the delegate to set the image
-        var attempts = 0
-        while cameraManager.capturedImage == nil && attempts < 10 {
-            try? await Task.sleep(nanoseconds: 50_000_000) // 50ms
-            attempts += 1
-        }
-        
-        guard let image = cameraManager.capturedImage,
+    private func saveCapturedImage(image: UIImage?, capturedPose: PoseData?) async {
+        guard let image,
               let imageData = image.jpegData(compressionQuality: 0.8) else {
             isCapturing = false
             enterCooldown()

@@ -3,14 +3,14 @@ import AVFoundation
 
 struct ScanView: View {
     @EnvironmentObject var appState: AppState
-    @StateObject private var cameraManager = CameraManager()
-    @StateObject private var poseEstimator = PoseEstimator()
+    @StateObject private var cameraManager: CameraManager
+    @StateObject private var poseEstimator: PoseEstimator
     @StateObject private var viewModel: ScanViewModel
 
     init() {
         let cm = CameraManager()
         let pe = PoseEstimator()
-        pe.cameraPosition = cm.currentPosition  // Set initial camera position
+        pe.cameraPosition = cm.currentPosition
         _cameraManager = StateObject(wrappedValue: cm)
         _poseEstimator = StateObject(wrappedValue: pe)
         _viewModel = StateObject(wrappedValue: ScanViewModel(cameraManager: cm, poseEstimator: pe))
@@ -142,16 +142,15 @@ struct ScanView: View {
             }
 
             // Countdown overlay - full screen on top of everything
-            if let countdown = viewModel.countdownValue {
-                CountdownOverlay(count: countdown)
-            }
+            CountdownOverlayView(number: $viewModel.countdownValue)
         }
         .navigationBarHidden(true)
         .task {
+            setupCallbacks()
             await setupCamera()
         }
-        .onAppear {
-            setupCallbacks()
+        .onDisappear {
+            cameraManager.stopSession()
         }
     }
 
@@ -257,72 +256,118 @@ struct ModeButton: View {
 
 // MARK: - Camera Preview
 
+class CameraPreviewUIView: UIView {
+    var previewLayer: AVCaptureVideoPreviewLayer? {
+        didSet {
+            oldValue?.removeFromSuperlayer()
+            if let previewLayer {
+                layer.insertSublayer(previewLayer, at: 0)
+                previewLayer.frame = bounds
+            }
+        }
+    }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        previewLayer?.frame = bounds
+    }
+}
+
 struct CameraPreviewView: UIViewRepresentable {
     @ObservedObject var cameraManager: CameraManager
 
-    func makeUIView(context: Context) -> UIView {
-        let view = UIView()
+    func makeUIView(context: Context) -> CameraPreviewUIView {
+        let view = CameraPreviewUIView()
         view.backgroundColor = .black
-
-        if let previewLayer = cameraManager.videoPreviewLayer {
-            previewLayer.frame = view.bounds
-            view.layer.addSublayer(previewLayer)
-        }
-
+        view.previewLayer = cameraManager.videoPreviewLayer
         return view
     }
 
-    func updateUIView(_ uiView: UIView, context: Context) {
-        if let previewLayer = cameraManager.videoPreviewLayer {
-            if previewLayer.superlayer !== uiView.layer {
-                uiView.layer.insertSublayer(previewLayer, at: 0)
-            }
-            previewLayer.frame = uiView.bounds
+    func updateUIView(_ uiView: CameraPreviewUIView, context: Context) {
+        if uiView.previewLayer !== cameraManager.videoPreviewLayer {
+            uiView.previewLayer = cameraManager.videoPreviewLayer
         }
     }
 }
 
 // MARK: - Countdown Overlay
 
-struct CountdownOverlay: View {
-    let count: Int
-    @State private var scale: CGFloat = 0.3
-    @State private var opacity: Double = 0
+/// Robust countdown overlay with synchronized animation and audio.
+/// The overlay appears when number is not nil, with smooth ring animation.
+private struct CountdownOverlayView: View {
+    @Binding var number: Int?
+    @State private var isAnimating = false
+    @State private var viewId = UUID()
+    
+    private let totalDuration: Double = 3.0
+    private let ringSize: CGFloat = 180
 
     var body: some View {
-        ZStack {
-            VisualEffectBlur(blurStyle: .systemUltraThinMaterialDark)
-                .ignoresSafeArea()
+        Group {
+            if number != nil {
+                ZStack {
+                    // Background blur
+                    VisualEffectBlur(blurStyle: .systemUltraThinMaterialDark)
+                        .ignoresSafeArea()
 
-            Text("\(count)")
-                .font(.system(size: 200, weight: .thin, design: .rounded))
-                .foregroundStyle(.white)
-                .shadow(color: .black.opacity(0.4), radius: 30)
-                .scaleEffect(scale)
-                .opacity(opacity)
+                    ZStack {
+                        // Background ring (dim)
+                        Circle()
+                            .stroke(Color.white.opacity(0.15), lineWidth: 6)
+                            .frame(width: ringSize, height: ringSize)
+
+                        // Progress ring — animates from full to empty over 3 seconds
+                        Circle()
+                            .trim(from: 0, to: isAnimating ? 0.0 : 1.0)
+                            .stroke(
+                                Color.white,
+                                style: StrokeStyle(lineWidth: 6, lineCap: .round)
+                            )
+                            .frame(width: ringSize, height: ringSize)
+                            .rotationEffect(.degrees(-90))
+                            .animation(
+                                .linear(duration: totalDuration),
+                                value: isAnimating
+                            )
+
+                        // Number display
+                        if let num = number {
+                            Text("\(num)")
+                                .font(.system(size: 100, weight: .thin, design: .rounded))
+                                .foregroundStyle(.white)
+                                .contentTransition(.numericText(countsDown: true))
+                                .transition(.scale.combined(with: .opacity))
+                                .animation(.easeInOut(duration: 0.15), value: num)
+                        }
+                    }
+                }
+                .transition(.opacity)
+                .id(viewId)
+            }
         }
         .onAppear {
-            animateIn()
+            setupAnimationTrigger()
         }
-        .onChange(of: count) { oldValue, newValue in
-            // Reset and re-animate when count changes
-            scale = 0.3
-            opacity = 0
-            animateIn()
+        .onChange(of: number) { oldValue, newValue in
+            // Detect countdown restart (nil -> 3)
+            if oldValue == nil, let val = newValue, val == 3 {
+                // Reset for new countdown
+                viewId = UUID()
+                isAnimating = false
+                setupAnimationTrigger()
+            }
+            // Detect countdown end (any number -> nil)
+            else if newValue == nil {
+                isAnimating = false
+            }
         }
     }
     
-    private func animateIn() {
-        withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
-            scale = 1.0
-            opacity = 1.0
-        }
-
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.65) {
-            withAnimation(.easeOut(duration: 0.25)) {
-                scale = 1.3
-                opacity = 0
-            }
+    private func setupAnimationTrigger() {
+        guard number != nil else { return }
+        // Small delay ensures view is rendered before animation starts
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.03) {
+            isAnimating = true
         }
     }
 }
