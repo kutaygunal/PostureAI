@@ -1,0 +1,5 @@
+---
+triple:          'x86_64-apple-darwin'
+binary-path:     '/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/build/Release-iphonesimulator/PostureAI.app/PostureAI'
+relocations:     []
+...

@@ -1,0 +1,232 @@
+{
+  "source": "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/PostureAI/Sources/Views/HeightInputView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Your Height",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 22
+        }
+      },
+      {
+        "comment": "",
+        "key": "Enter your height for accurate posture analysis",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 26
+        }
+      },
+      {
+        "comment": "",
+        "key": "cm",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 42
+        }
+      },
+      {
+        "comment": "",
+        "key": "ft/in",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 56
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld cm",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 73
+        }
+      },
+      {
+        "comment": "",
+        "key": "120 cm",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 82
+        }
+      },
+      {
+        "comment": "",
+        "key": "220 cm",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 86
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld cm",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 119
+        }
+      },
+      {
+        "comment": "",
+        "key": "Feet",
+        "location": {
+          "startingColumn": 40,
+          "startingLine": 97
+        }
+      },
+      {
+        "comment": "",
+        "key": "Inches",
+        "location": {
+          "startingColumn": 40,
+          "startingLine": 107
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld ft",
+        "location": {
+          "startingColumn": 46,
+          "startingLine": 99
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld in",
+        "location": {
+          "startingColumn": 46,
+          "startingLine": 109
+        }
+      },
+      {
+        "comment": "",
+        "key": "Generate Report",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 129
+        }
+      },
+      {
+        "comment": "",
+        "key": "Enter Your Height",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 202
+        }
+      },
+      {
+        "comment": "",
+        "key": "For accurate posture measurements",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 206
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 236
+        }
+      },
+      {
+        "comment": "",
+        "key": "cm",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 239
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 243
+        }
+      },
+      {
+        "comment": "",
+        "key": "ft",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 246
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 249
+        }
+      },
+      {
+        "comment": "",
+        "key": "in",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 253
+        }
+      },
+      {
+        "comment": "",
+        "key": "120 cm",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 267
+        }
+      },
+      {
+        "comment": "",
+        "key": "220 cm",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 271
+        }
+      },
+      {
+        "comment": "",
+        "key": "Feet",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 279
+        }
+      },
+      {
+        "comment": "",
+        "key": "Inches",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 288
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld ft",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 281
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld in",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 290
+        }
+      },
+      {
+        "comment": "",
+        "key": "Continue to Results",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 314
+        }
+      }
+    ]
+  },
+  "version": 1
+}

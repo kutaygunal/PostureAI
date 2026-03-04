@@ -139,7 +139,7 @@ class CameraManager: NSObject, ObservableObject {
             if session.canAddInput(newInput) {
                 session.addInput(newInput)
                 videoInput = newInput
-                currentPosition = position
+                // Don't update currentPosition here - it's done by the caller on main thread
             }
         } catch {
             DispatchQueue.main.async {
@@ -170,6 +170,11 @@ class CameraManager: NSObject, ObservableObject {
                     if connection.isVideoRotationAngleSupported(90) {
                         connection.videoRotationAngle = 90
                     }
+                }
+                
+                // Update currentPosition on main thread
+                DispatchQueue.main.async {
+                    self.currentPosition = newPosition
                 }
                 
                 continuation.resume()
@@ -226,6 +231,12 @@ extension CameraManager: AVCapturePhotoCaptureDelegate {
             self.capturedImage = image
             self.onPhotoCaptured?(image)
             self.onPhotoCaptured = nil
+        }
+    }
+    
+    func photoOutput(_ output: AVCapturePhotoOutput, didFinishCaptureFor resolvedSettings: AVCaptureResolvedPhotoSettings, error: Error?) {
+        if let error = error {
+            print("Photo capture error: \(error.localizedDescription)")
         }
     }
 }

@@ -15,15 +15,19 @@ struct EnhancedReportView: View {
     @State private var headerOpacity: Double = 0
     @State private var cardsOffset: CGFloat = 50
     @State private var cardsOpacity: Double = 0
-    @State private var overallScore: Int = 75 // Fixed score to prevent flickering
-    
+    @State private var overallScore: Int = 75
+
+    // Analysis metrics
+    @State private var sideMetrics: SidePostureMetrics?
+    @State private var frontMetrics: FrontPostureMetrics?
+
     private let dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateStyle = .long
         formatter.timeStyle = .short
         return formatter
     }()
-    
+
     var body: some View {
         ScrollView(showsIndicators: false) {
             VStack(spacing: 24) {
@@ -39,62 +43,48 @@ struct EnhancedReportView: View {
                         headerOpacity = 1
                     }
                 }
-                
+
                 // Overall Score Card
                 OverallScoreCard(score: overallScore)
                     .offset(y: cardsOffset)
                     .opacity(cardsOpacity)
-                
-                // View Mode Picker
+
+                // View Mode Picker - moved outside animation modifiers
                 Picker("View Mode", selection: $selectedViewMode) {
                     Text("Side View").tag(EnhancedViewMode.side)
                     Text("Front View").tag(EnhancedViewMode.front)
                 }
                 .pickerStyle(SegmentedPickerStyle())
                 .padding(.horizontal, 16)
-                .offset(y: cardsOffset)
-                .opacity(cardsOpacity)
-                
+
                 // Comparison Section based on selected mode
-                if selectedViewMode == .side {
-                    SideComparisonSection(
-                        sideImageURL: appState.capturedSideImageURL,
-                        analysisData: generateSideAnalysisData()
-                    )
-                    .offset(y: cardsOffset)
-                    .opacity(cardsOpacity)
-                } else {
-                    FrontComparisonSection(
-                        frontImageURL: appState.capturedFrontImageURL,
-                        analysisData: generateFrontAnalysisData()
-                    )
-                    .offset(y: cardsOffset)
-                    .opacity(cardsOpacity)
-                }
-                
-                // Detailed Metrics
-                DetailedMetricsSection(metrics: generateMetrics())
-                    .offset(y: cardsOffset)
-                    .opacity(cardsOpacity)
-                
+                viewModeSection
+                    .id(selectedViewMode)
+                    .transition(.opacity)
+                    .animation(.easeInOut(duration: 0.3), value: selectedViewMode)
+
+                // Detailed Metrics based on selected mode
+                DetailedMetricsSection(metrics: generateMetricsForCurrentMode())
+                    .id("metrics-\(selectedViewMode)")
+                    .transition(.opacity)
+                    .animation(.easeInOut(duration: 0.3), value: selectedViewMode)
+
                 // Recommendations
                 RecommendationsSection()
-                    .offset(y: cardsOffset)
-                    .opacity(cardsOpacity)
-                
+                    .padding(.vertical, 8)
+
                 // Action Buttons
                 ActionButtonsSection {
                     appState.reset()
                 }
-                .offset(y: cardsOffset)
-                .opacity(cardsOpacity)
                 .padding(.bottom, 32)
             }
             .padding(.horizontal, 16)
             .onAppear {
-                // Calculate score once when view appears
+                // Calculate metrics
+                calculateMetrics()
                 overallScore = calculateOverallScore()
-                
+
                 withAnimation(.spring(response: 0.6, dampingFraction: 0.8).delay(0.1)) {
                     cardsOffset = 0
                     cardsOpacity = 1
@@ -116,25 +106,60 @@ struct EnhancedReportView: View {
         .navigationBarHidden(true)
     }
     
-    // MARK: - Real Data Functions
+    // MARK: - View Mode Section
     
+    @ViewBuilder
+    private var viewModeSection: some View {
+        if selectedViewMode == .side {
+            EnhancedSideComparisonSection(
+                sideImageURL: appState.capturedSideImageURL,
+                metrics: sideMetrics
+            )
+        } else {
+            EnhancedFrontComparisonSection(
+                frontImageURL: appState.capturedFrontImageURL,
+                metrics: frontMetrics
+            )
+        }
+    }
+
+    // MARK: - Real Data Functions
+
     private func calculateOverallScore() -> Int {
-        // Calculate score from real pose data
-        let frontAnalysis = calculateFrontAnalysis()
-        let sideAnalysis = calculateSideAnalysis()
-        
-        return PostureAnalyzer.calculateOverallScore(
-            frontAnalysis: frontAnalysis,
-            sideAnalysis: sideAnalysis
+        // Calculate score from real pose data using enhanced analyzer
+        guard let side = sideMetrics, let front = frontMetrics else {
+            return 75 // Default fallback
+        }
+
+        return EnhancedPostureAnalyzer.calculateOverallScore(
+            sideMetrics: side,
+            frontMetrics: front
         )
     }
-    
+
+    private func calculateMetrics() {
+        // Calculate enhanced metrics from captured poses
+        if let sidePose = appState.capturedSidePose {
+            sideMetrics = EnhancedPostureAnalyzer.analyzeSidePose(
+                from: sidePose,
+                userHeightCm: appState.userHeightCm
+            )
+        }
+
+        if let frontPose = appState.capturedFrontPose {
+            frontMetrics = EnhancedPostureAnalyzer.analyzeFrontPose(
+                from: frontPose,
+                userHeightCm: appState.userHeightCm
+            )
+        }
+    }
+
     private func calculateSideAnalysis() -> PostureAnalysis {
         guard let pose = appState.capturedSidePose,
               pose.hasValidJoints || pose.hasSideViewCoreJoints else {
             return PostureAnalysis()
         }
-        
+
         // Assume reasonable frame height for calculations
         let frameHeight: Double = 1920 // Typical photo height
         return PostureAnalyzer.analyzeSidePose(
@@ -143,13 +168,13 @@ struct EnhancedReportView: View {
             frameHeight: frameHeight
         )
     }
-    
+
     private func calculateFrontAnalysis() -> PostureAnalysis {
         guard let pose = appState.capturedFrontPose,
               pose.hasValidJoints else {
             return PostureAnalysis()
         }
-        
+
         let frameHeight: Double = 1920
         return PostureAnalyzer.analyzeFrontPose(
             from: pose,
@@ -157,7 +182,7 @@ struct EnhancedReportView: View {
             frameHeight: frameHeight
         )
     }
-    
+
     private func generateSideAnalysisData() -> SideAnalysisData {
         let analysis = calculateSideAnalysis()
         return SideAnalysisData(
@@ -171,7 +196,7 @@ struct EnhancedReportView: View {
             )
         )
     }
-    
+
     private func generateFrontAnalysisData() -> FrontAnalysisData {
         let analysis = calculateFrontAnalysis()
         return FrontAnalysisData(
@@ -185,75 +210,209 @@ struct EnhancedReportView: View {
             )
         )
     }
-    
+
     private func combineStatuses(_ statuses: OffsetStatus...) -> OffsetStatus {
         if statuses.contains(.severe) { return .severe }
         if statuses.contains(.mild) { return .mild }
         if statuses.contains(.good) { return .good }
         return .neutral
     }
-    
+
     private func generateMetrics() -> [PostureMetric] {
-        let frontAnalysis = calculateFrontAnalysis()
-        let sideAnalysis = calculateSideAnalysis()
+        var metrics: [PostureMetric] = []
+
+        // Use enhanced metrics if available
+        if let side = sideMetrics {
+            // Head Position (from side view)
+            metrics.append(PostureMetric(
+                title: "Head Forward",
+                value: String(format: "%.1f cm", side.headForwardCm),
+                status: side.headStatus,
+                icon: "person.fill",
+                description: "Head is \(String(format: "%.1f", side.headForwardCm))cm forward from ideal vertical line"
+            ))
+
+            // Shoulder Forward
+            metrics.append(PostureMetric(
+                title: "Shoulders Forward",
+                value: String(format: "%.1f cm", side.shoulderForwardCm),
+                status: side.shoulderStatus,
+                icon: "person.crop.rectangle",
+                description: "Shoulders are \(String(format: "%.1f", side.shoulderForwardCm))cm forward from ideal vertical line"
+            ))
+
+            // Hip Forward
+            metrics.append(PostureMetric(
+                title: "Hips Forward",
+                value: String(format: "%.1f cm", side.hipForwardCm),
+                status: side.hipStatus,
+                icon: "figure.walk",
+                description: "Hips are \(String(format: "%.1f", side.hipForwardCm))cm from ideal vertical line"
+            ))
+
+            // Knee Forward
+            metrics.append(PostureMetric(
+                title: "Knees Forward",
+                value: String(format: "%.1f cm", side.kneeForwardCm),
+                status: side.kneeStatus,
+                icon: "figure.walk",
+                description: "Knees are \(String(format: "%.1f", side.kneeForwardCm))cm from ideal vertical line"
+            ))
+        }
+
+        // Front view metrics
+        if let front = frontMetrics {
+            metrics.append(PostureMetric(
+                title: "Shoulder Level",
+                value: String(format: "%.1f°", abs(front.shoulderTiltAngle)),
+                status: front.shoulderStatus,
+                icon: "arrow.left.arrow.right",
+                description: front.shoulderTiltAngle > 0 ? "Right shoulder higher" : "Left shoulder higher"
+            ))
+
+            metrics.append(PostureMetric(
+                title: "Hip Level",
+                value: String(format: "%.1f°", abs(front.hipTiltAngle)),
+                status: front.hipStatus,
+                icon: "figure.stand",
+                description: front.hipTiltAngle > 0 ? "Right hip higher" : "Left hip higher"
+            ))
+        }
         
+        return metrics
+    }
+    
+    // MARK: - View-Specific Metrics
+    
+    private func generateMetricsForCurrentMode() -> [PostureMetric] {
+        switch selectedViewMode {
+        case .side:
+            return generateSideMetrics()
+        case .front:
+            return generateFrontMetrics()
+        }
+    }
+    
+    private func generateSideMetrics() -> [PostureMetric] {
         var metrics: [PostureMetric] = []
         
-        // Head Position (from side view - head tilt/fwd head posture)
-        let headStatus = sideAnalysis.headTiltStatus
-        metrics.append(PostureMetric(
-            title: "Head Position",
-            value: String(format: "%.1f°", abs(sideAnalysis.headTiltAngle)),
-            status: headStatus,
-            icon: "head.side",
-            description: headStatusDescription(for: sideAnalysis)
-        ))
+        guard let side = sideMetrics else {
+            return [PostureMetric(
+                title: "No Data",
+                value: "-",
+                status: .neutral,
+                icon: "exclamationmark.triangle",
+                description: "Side view data not available"
+            )]
+        }
         
-        // Shoulder Alignment (from front view - levelness)
-        let shoulderStatus = frontAnalysis.shoulderOffsetStatus
+        // Head Position
         metrics.append(PostureMetric(
-            title: "Shoulder Alignment",
-            value: String(format: "%.1f°", abs(frontAnalysis.headTiltAngle)),
-            status: shoulderStatus,
-            icon: "arrow.left.and.right",
-            description: shoulderStatusDescription(for: frontAnalysis)
-        ))
-        
-        // Hip Position (combination of front hip tilt and side hip offset)
-        let hipStatus = worseStatus(frontAnalysis.hipOffsetStatus, sideAnalysis.hipOffsetStatus)
-        metrics.append(PostureMetric(
-            title: "Hip Position",
-            value: String(format: "%.1f°", max(abs(frontAnalysis.hipOffset), abs(sideAnalysis.hipOffset))),
-            status: hipStatus,
-            icon: "figure.walk",
-            description: hipStatusDescription(front: frontAnalysis, side: sideAnalysis)
-        ))
-        
-        // Forward Posture (from side view - rounded shoulders)
-        let forwardStatus = sideAnalysis.shoulderOffsetStatus
-        metrics.append(PostureMetric(
-            title: "Forward Posture",
-            value: String(format: "%.1f cm", sideAnalysis.shoulderForwardOffset),
-            status: forwardStatus,
+            title: "Head Forward",
+            value: String(format: "%.1f cm", side.headForwardCm),
+            status: side.headStatus,
             icon: "person.fill",
-            description: forwardPostureDescription(for: sideAnalysis)
+            description: side.headForwardCm > 0 
+                ? "Head is \(String(format: "%.1f", side.headForwardCm))cm forward from ideal"
+                : "Good head alignment"
         ))
         
-        // Spine Alignment (based on overall deviation)
-        let spineStatus = frontAnalysis.headTiltStatus
+        // Shoulder Forward
         metrics.append(PostureMetric(
-            title: "Spine Alignment",
-            value: spineStatus == .good ? "Good" : (spineStatus == .mild ? "Slight Curve" : "Notable Curve"),
-            status: spineStatus,
-            icon: "waveform.path",
-            description: "Based on front view vertical alignment"
+            title: "Shoulders Forward",
+            value: String(format: "%.1f cm", side.shoulderForwardCm),
+            status: side.shoulderStatus,
+            icon: "person.crop.rectangle",
+            description: side.shoulderForwardCm > 0
+                ? "Shoulders are \(String(format: "%.1f", side.shoulderForwardCm))cm forward"
+                : "Good shoulder alignment"
+        ))
+        
+        // Hip Forward
+        metrics.append(PostureMetric(
+            title: "Hips Forward",
+            value: String(format: "%.1f cm", side.hipForwardCm),
+            status: side.hipStatus,
+            icon: "figure.walk",
+            description: side.hipForwardCm > 0
+                ? "Hips are \(String(format: "%.1f", side.hipForwardCm))cm from ideal"
+                : "Good hip alignment"
+        ))
+        
+        // Knee Forward
+        metrics.append(PostureMetric(
+            title: "Knees Forward",
+            value: String(format: "%.1f cm", side.kneeForwardCm),
+            status: side.kneeStatus,
+            icon: "figure.walk",
+            description: side.kneeForwardCm > 0
+                ? "Knees are \(String(format: "%.1f", side.kneeForwardCm))cm from ideal"
+                : "Good knee alignment"
         ))
         
         return metrics
     }
     
+    private func generateFrontMetrics() -> [PostureMetric] {
+        var metrics: [PostureMetric] = []
+        
+        guard let front = frontMetrics else {
+            return [PostureMetric(
+                title: "No Data",
+                value: "-",
+                status: .neutral,
+                icon: "exclamationmark.triangle",
+                description: "Front view data not available"
+            )]
+        }
+        
+        // Shoulder Level
+        metrics.append(PostureMetric(
+            title: "Shoulder Level",
+            value: String(format: "%.1f°", abs(front.shoulderTiltAngle)),
+            status: front.shoulderStatus,
+            icon: "arrow.left.arrow.right",
+            description: abs(front.shoulderTiltAngle) > 2
+                ? (front.shoulderTiltAngle > 0 ? "Right shoulder higher" : "Left shoulder higher")
+                : "Shoulders are level"
+        ))
+        
+        // Hip Level
+        metrics.append(PostureMetric(
+            title: "Hip Level",
+            value: String(format: "%.1f°", abs(front.hipTiltAngle)),
+            status: front.hipStatus,
+            icon: "figure.stand",
+            description: abs(front.hipTiltAngle) > 2
+                ? (front.hipTiltAngle > 0 ? "Right hip higher" : "Left hip higher")
+                : "Hips are level"
+        ))
+        
+        // Head Tilt
+        metrics.append(PostureMetric(
+            title: "Head Tilt",
+            value: String(format: "%.1f°", abs(front.headTiltAngle)),
+            status: front.headStatus,
+            icon: "person.fill",
+            description: abs(front.headTiltAngle) > 3
+                ? "Head is tilted"
+                : "Head is straight"
+        ))
+        
+        // Spine Deviation
+        metrics.append(PostureMetric(
+            title: "Spine Center",
+            value: String(format: "%.1f", front.spineDeviationPx),
+            status: front.spineStatus,
+            icon: "waveform.path",
+            description: "Spine deviation from center"
+        ))
+        
+        return metrics
+    }
+
     // MARK: - Status Description Helpers
-    
+
     private func headStatusDescription(for analysis: PostureAnalysis) -> String {
         switch analysis.headTiltStatus {
         case .good:
@@ -266,7 +425,7 @@ struct EnhancedReportView: View {
             return "Analyzing..."
         }
     }
-    
+
     private func shoulderStatusDescription(for analysis: PostureAnalysis) -> String {
         switch analysis.shoulderOffsetStatus {
         case .good:
@@ -279,7 +438,7 @@ struct EnhancedReportView: View {
             return "Analyzing..."
         }
     }
-    
+
     private func hipStatusDescription(front: PostureAnalysis, side: PostureAnalysis) -> String {
         let status = worseStatus(front.hipOffsetStatus, side.hipOffsetStatus)
         switch status {
@@ -293,7 +452,7 @@ struct EnhancedReportView: View {
             return "Analyzing..."
         }
     }
-    
+
     private func forwardPostureDescription(for analysis: PostureAnalysis) -> String {
         switch analysis.shoulderOffsetStatus {
         case .good:
@@ -306,7 +465,7 @@ struct EnhancedReportView: View {
             return "Analyzing..."
         }
     }
-    
+
     private func worseStatus(_ a: OffsetStatus, _ b: OffsetStatus) -> OffsetStatus {
         let severity: [OffsetStatus: Int] = [.good: 0, .neutral: 1, .mild: 2, .severe: 3]
         return severity[a]! >= severity[b]! ? a : b
@@ -319,23 +478,23 @@ struct ReportHeader: View {
     let dateText: String
     let offset: CGFloat
     let opacity: Double
-    
+
     var body: some View {
         VStack(spacing: 12) {
             Text("Posture Analysis")
                 .font(.system(size: 34, weight: .bold, design: .rounded))
                 .foregroundColor(.white)
-            
+
             HStack(spacing: 8) {
                 Image(systemName: "calendar")
                     .font(.system(size: 14))
                     .foregroundColor(.gray)
-                
+
                 Text(dateText)
                     .font(.system(size: 14, weight: .medium))
                     .foregroundColor(.gray)
             }
-            
+
             // Disclaimer
             HStack(spacing: 8) {
                 Image(systemName: "info.circle.fill")
@@ -369,7 +528,7 @@ struct OverallScoreCard: View {
     let score: Int
     @State private var animatedScore: Int = 0
     @State private var ringProgress: CGFloat = 0
-    
+
     var scoreColor: Color {
         switch score {
         case 80...100: return .green
@@ -377,7 +536,7 @@ struct OverallScoreCard: View {
         default: return .orange
         }
     }
-    
+
     var scoreLabel: String {
         switch score {
         case 80...100: return "Excellent"
@@ -385,7 +544,7 @@ struct OverallScoreCard: View {
         default: return "Needs Attention"
         }
     }
-    
+
     var body: some View {
         VStack(spacing: 20) {
             ZStack {
@@ -393,7 +552,7 @@ struct OverallScoreCard: View {
                 Circle()
                     .stroke(Color.white.opacity(0.1), lineWidth: 12)
                     .frame(width: 160, height: 160)
-                
+
                 // Progress ring
                 Circle()
                     .trim(from: 0, to: ringProgress)
@@ -404,19 +563,19 @@ struct OverallScoreCard: View {
                     .frame(width: 160, height: 160)
                     .rotationEffect(.degrees(-90))
                     .shadow(color: scoreColor.opacity(0.5), radius: 10)
-                
+
                 // Score text
                 VStack(spacing: 4) {
                     Text("\(animatedScore)")
                         .font(.system(size: 56, weight: .bold, design: .rounded))
                         .foregroundColor(.white)
-                    
+
                     Text("/ 100")
                         .font(.system(size: 16, weight: .medium))
                         .foregroundColor(.gray)
                 }
             }
-            
+
             Text(scoreLabel)
                 .font(.system(size: 20, weight: .semibold))
                 .foregroundColor(scoreColor)
@@ -434,13 +593,13 @@ struct OverallScoreCard: View {
             withAnimation(.easeOut(duration: 1.0).delay(0.3)) {
                 ringProgress = CGFloat(score) / 100
             }
-            
+
             // Animate score counting
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                 let duration = 1.0
                 let steps = 60
                 let increment = Double(score) / Double(steps)
-                
+
                 for i in 0..<steps {
                     DispatchQueue.main.asyncAfter(deadline: .now() + Double(i) * duration / Double(steps)) {
                         animatedScore = min(Int(increment * Double(i + 1)), score)
@@ -451,19 +610,183 @@ struct OverallScoreCard: View {
     }
 }
 
-// MARK: - Side Comparison Section
+// MARK: - Enhanced Comparison Sections (NEW)
 
-struct SideComparisonSection: View {
+struct EnhancedSideComparisonSection: View {
     let sideImageURL: URL?
-    let analysisData: SideAnalysisData
-    
+    let metrics: SidePostureMetrics?
+
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Side View Analysis")
                 .font(.system(size: 20, weight: .bold))
                 .foregroundColor(.white)
                 .padding(.horizontal, 4)
-            
+
+            // Image with analysis overlay
+            GeometryReader { geo in
+                ZStack {
+                    RoundedRectangle(cornerRadius: 16)
+                        .fill(Color.gray.opacity(0.2))
+
+                    if let url = sideImageURL,
+                       let imageData = try? Data(contentsOf: url),
+                       let uiImage = UIImage(data: imageData) {
+                        Image(uiImage: uiImage)
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .clipShape(RoundedRectangle(cornerRadius: 16))
+                    } else {
+                        VStack(spacing: 8) {
+                            Image(systemName: "person.fill")
+                                .font(.system(size: 40))
+                                .foregroundColor(.gray)
+                            Text("No Image")
+                                .foregroundColor(.gray)
+                        }
+                    }
+
+                    // Enhanced analysis overlay - now using actual container size
+                    if let metrics = metrics, metrics.hasValidData {
+                        SideAnalysisOverlay(
+                            metrics: metrics,
+                            imageSize: geo.size
+                        )
+                    }
+                }
+            }
+            .frame(height: 280)
+            .clipShape(RoundedRectangle(cornerRadius: 16))
+
+            // Legend
+            HStack(spacing: 16) {
+                LegendItem(color: .green, label: "Ideal Plumb Line")
+                LegendItem(color: .cyan, label: "Actual Body Line")
+                LegendItem(color: .orange, label: "Deviation")
+            }
+
+            // Quick stats box
+            if let metrics = metrics {
+                let headCm = String(format: "%.1f cm", metrics.headForwardCm)
+                let shoulderCm = String(format: "%.1f cm", metrics.shoulderForwardCm)
+                let hipCm = String(format: "%.1f cm", metrics.hipForwardCm)
+
+                HStack(spacing: 16) {
+                    QuickStat(label: "Head Fwd", value: headCm)
+                    QuickStat(label: "Shoulders", value: shoulderCm)
+                    QuickStat(label: "Hips", value: hipCm)
+                }
+            }
+        }
+        .padding(20)
+        .background(
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .fill(Color.white.opacity(0.05))
+        )
+    }
+}
+
+struct EnhancedFrontComparisonSection: View {
+    let frontImageURL: URL?
+    let metrics: FrontPostureMetrics?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Front View Analysis")
+                .font(.system(size: 20, weight: .bold))
+                .foregroundColor(.white)
+                .padding(.horizontal, 4)
+
+            // Image with analysis overlay
+            GeometryReader { geo in
+                ZStack {
+                    RoundedRectangle(cornerRadius: 16)
+                        .fill(Color.gray.opacity(0.2))
+
+                    if let url = frontImageURL,
+                       let imageData = try? Data(contentsOf: url),
+                       let uiImage = UIImage(data: imageData) {
+                        Image(uiImage: uiImage)
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .clipShape(RoundedRectangle(cornerRadius: 16))
+                    } else {
+                        VStack(spacing: 8) {
+                            Image(systemName: "person.fill")
+                                .font(.system(size: 40))
+                                .foregroundColor(.gray)
+                            Text("No Image")
+                                .foregroundColor(.gray)
+                        }
+                    }
+
+                    // Enhanced analysis overlay - now using actual container size
+                    if let metrics = metrics, metrics.hasValidData {
+                        FrontAnalysisOverlay(metrics: metrics)
+                            .frame(width: geo.size.width, height: geo.size.height)
+                    }
+                }
+            }
+            .frame(height: 280)
+            .clipShape(RoundedRectangle(cornerRadius: 16))
+
+            // Legend
+            HStack(spacing: 16) {
+                LegendItem(color: .green, label: "Ideal Horizontal")
+                LegendItem(color: .cyan, label: "Center Line")
+                LegendItem(color: .orange, label: "Deviation")
+            }
+
+            // Quick stats
+            if let metrics = metrics {
+                let shoulderDeg = String(format: "%.1f°", abs(metrics.shoulderTiltAngle))
+                let hipDeg = String(format: "%.1f°", abs(metrics.hipTiltAngle))
+                let headDeg = String(format: "%.1f°", abs(metrics.headTiltAngle))
+
+                HStack(spacing: 16) {
+                    QuickStat(label: "Shoulder Tilt", value: shoulderDeg)
+                    QuickStat(label: "Hip Tilt", value: hipDeg)
+                    QuickStat(label: "Head Tilt", value: headDeg)
+                }
+            }
+        }
+        .padding(20)
+        .background(
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .fill(Color.white.opacity(0.05))
+        )
+    }
+}
+
+struct LegendItem: View {
+    let color: Color
+    let label: String
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Circle()
+                .fill(color)
+                .frame(width: 8, height: 8)
+            Text(label)
+                .font(.system(size: 12))
+                .foregroundColor(.gray)
+        }
+    }
+}
+
+// MARK: - Side Comparison Section
+
+struct SideComparisonSection: View {
+    let sideImageURL: URL?
+    let analysisData: SideAnalysisData
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Side View Analysis")
+                .font(.system(size: 20, weight: .bold))
+                .foregroundColor(.white)
+                .padding(.horizontal, 4)
+
             // Image comparison
             HStack(spacing: 12) {
                 // Ideal pose visualization
@@ -472,7 +795,7 @@ struct SideComparisonSection: View {
                         RoundedRectangle(cornerRadius: 16)
                             .fill(Color.gray.opacity(0.2))
                             .frame(height: 180)
-                        
+
                         // Simple posture line visualization
                         VStack(spacing: 0) {
                             Circle()
@@ -486,7 +809,7 @@ struct SideComparisonSection: View {
                                 .frame(width: 80, height: 4)
                         }
                         .opacity(0.5)
-                        
+
                         Text("Ideal")
                             .font(.system(size: 12, weight: .medium))
                             .foregroundColor(.white)
@@ -496,25 +819,25 @@ struct SideComparisonSection: View {
                             .cornerRadius(8)
                             .position(x: 40, y: 150)
                     }
-                    
+
                     Text("Reference")
                         .font(.system(size: 14, weight: .medium))
                         .foregroundColor(.gray)
                 }
-                
+
                 // Captured image
                 VStack(spacing: 8) {
                     ZStack {
                         RoundedRectangle(cornerRadius: 16)
                             .fill(Color.gray.opacity(0.2))
                             .frame(height: 180)
-                        
+
                         if let url = sideImageURL,
                            let imageData = try? Data(contentsOf: url),
                            let uiImage = UIImage(data: imageData) {
                             Image(uiImage: uiImage)
                                 .resizable()
-                                .aspectRatio(contentMode: .fill)
+                                .aspectRatio(contentMode: .fit)
                                 .frame(height: 180)
                                 .clipShape(RoundedRectangle(cornerRadius: 16))
                         } else {
@@ -526,22 +849,22 @@ struct SideComparisonSection: View {
                                     .foregroundColor(.gray)
                             }
                         }
-                        
+
                         // Analysis overlay
                         SidePostureOverlayLines(data: analysisData)
                     }
-                    
+
                     Text("Your Pose")
                         .font(.system(size: 14, weight: .medium))
                         .foregroundColor(.gray)
                 }
             }
-            
+
             // Quick stats
             let headValue = String(format: "%.1f°", analysisData.headAngle)
             let shoulderValue = String(format: "%.1f°", analysisData.shoulderTilt)
             let hipValue = String(format: "%.1f°", analysisData.hipAlignment)
-            
+
             HStack(spacing: 16) {
                 QuickStat(label: "Head Tilt", value: headValue)
                 QuickStat(label: "Shoulder", value: shoulderValue)
@@ -565,14 +888,14 @@ struct SideComparisonSection: View {
 struct FrontComparisonSection: View {
     let frontImageURL: URL?
     let analysisData: FrontAnalysisData
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Front View Analysis")
                 .font(.system(size: 20, weight: .bold))
                 .foregroundColor(.white)
                 .padding(.horizontal, 4)
-            
+
             // Image comparison
             HStack(spacing: 12) {
                 // Ideal front pose visualization
@@ -581,7 +904,7 @@ struct FrontComparisonSection: View {
                         RoundedRectangle(cornerRadius: 16)
                             .fill(Color.gray.opacity(0.2))
                             .frame(height: 180)
-                        
+
                         // Front view ideal silhouette
                         VStack(spacing: 0) {
                             // Head
@@ -616,7 +939,7 @@ struct FrontComparisonSection: View {
                                 .frame(width: 55, height: 12)
                         }
                         .opacity(0.5)
-                        
+
                         Text("Ideal")
                             .font(.system(size: 12, weight: .medium))
                             .foregroundColor(.white)
@@ -626,25 +949,25 @@ struct FrontComparisonSection: View {
                             .cornerRadius(8)
                             .position(x: 40, y: 150)
                     }
-                    
+
                     Text("Reference")
                         .font(.system(size: 14, weight: .medium))
                         .foregroundColor(.gray)
                 }
-                
+
                 // Captured front image
                 VStack(spacing: 8) {
                     ZStack {
                         RoundedRectangle(cornerRadius: 16)
                             .fill(Color.gray.opacity(0.2))
                             .frame(height: 180)
-                        
+
                         if let url = frontImageURL,
                            let imageData = try? Data(contentsOf: url),
                            let uiImage = UIImage(data: imageData) {
                             Image(uiImage: uiImage)
                                 .resizable()
-                                .aspectRatio(contentMode: .fill)
+                                .aspectRatio(contentMode: .fit)
                                 .frame(height: 180)
                                 .clipShape(RoundedRectangle(cornerRadius: 16))
                         } else {
@@ -656,22 +979,22 @@ struct FrontComparisonSection: View {
                                     .foregroundColor(.gray)
                             }
                         }
-                        
+
                         // Analysis overlay for front view
                         FrontPostureOverlayLines(data: analysisData)
                     }
-                    
+
                     Text("Your Pose")
                         .font(.system(size: 14, weight: .medium))
                         .foregroundColor(.gray)
                 }
             }
-            
+
             // Quick stats for front view
             let shoulderValue = String(format: "%.1f°", analysisData.shoulderLevelness)
             let hipValue = String(format: "%.1f°", analysisData.hipBalance)
             let spineValue = String(format: "%.1f°", analysisData.spinalDeviation)
-            
+
             HStack(spacing: 16) {
                 QuickStat(label: "Shoulders", value: shoulderValue)
                 QuickStat(label: "Hips", value: hipValue)
@@ -694,7 +1017,7 @@ struct FrontComparisonSection: View {
 
 struct SidePostureOverlayLines: View {
     let data: SideAnalysisData
-    
+
     var body: some View {
         GeometryReader { geometry in
             ZStack {
@@ -703,7 +1026,7 @@ struct SidePostureOverlayLines: View {
                     .fill(Color.green.opacity(0.3))
                     .frame(width: 2, height: geometry.size.height * 0.6)
                     .position(x: geometry.size.width / 2, y: geometry.size.height / 2)
-                
+
                 // Actual posture line (slightly offset)
                 Rectangle()
                     .fill(Color.yellow.opacity(0.6))
@@ -722,7 +1045,7 @@ struct SidePostureOverlayLines: View {
 
 struct FrontPostureOverlayLines: View {
     let data: FrontAnalysisData
-    
+
     var body: some View {
         GeometryReader { geometry in
             ZStack {
@@ -731,7 +1054,7 @@ struct FrontPostureOverlayLines: View {
                     .fill(Color.green.opacity(0.3))
                     .frame(width: 2, height: geometry.size.height * 0.6)
                     .position(x: geometry.size.width / 2, y: geometry.size.height / 2)
-                
+
                 // Horizontal shoulder reference
                 Rectangle()
                     .fill(Color.blue.opacity(0.4))
@@ -740,7 +1063,7 @@ struct FrontPostureOverlayLines: View {
                         x: geometry.size.width / 2,
                         y: geometry.size.height * 0.35
                     )
-                    
+
                 // Horizontal hip reference
                 Rectangle()
                     .fill(Color.blue.opacity(0.4))
@@ -757,7 +1080,7 @@ struct FrontPostureOverlayLines: View {
 struct QuickStat: View {
     let label: String
     let value: String
-    
+
     var body: some View {
         VStack(spacing: 4) {
             Text(value)
@@ -780,14 +1103,14 @@ struct QuickStat: View {
 
 struct DetailedMetricsSection: View {
     let metrics: [PostureMetric]
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Detailed Analysis")
                 .font(.system(size: 20, weight: .bold))
                 .foregroundColor(.white)
                 .padding(.horizontal, 4)
-            
+
             VStack(spacing: 12) {
                 ForEach(metrics) { metric in
                     MetricRowView(metric: metric)
@@ -809,7 +1132,7 @@ struct DetailedMetricsSection: View {
 struct MetricRowView: View {
     let metric: PostureMetric
     @State private var isExpanded = false
-    
+
     var statusColor: Color {
         switch metric.status {
         case .good: return .green
@@ -818,7 +1141,7 @@ struct MetricRowView: View {
         case .neutral: return .gray
         }
     }
-    
+
     var body: some View {
         Button(action: { withAnimation(.spring(response: 0.3)) { isExpanded.toggle() } }) {
             VStack(alignment: .leading, spacing: 8) {
@@ -832,12 +1155,12 @@ struct MetricRowView: View {
                             Circle()
                                 .fill(statusColor.opacity(0.1))
                         )
-                    
+
                     VStack(alignment: .leading, spacing: 2) {
                         Text(metric.title)
                             .font(.system(size: 16, weight: .semibold))
                             .foregroundColor(.white)
-                        
+
                         if !isExpanded {
                             Text(metric.description)
                                 .font(.system(size: 13))
@@ -845,20 +1168,20 @@ struct MetricRowView: View {
                                 .lineLimit(1)
                         }
                     }
-                    
+
                     Spacer()
-                    
+
                     VStack(alignment: .trailing, spacing: 2) {
                         Text(metric.value)
                             .font(.system(size: 18, weight: .bold))
                             .foregroundColor(statusColor)
-                        
+
                         Text(metric.status.description)
                             .font(.system(size: 11))
                             .foregroundColor(.gray)
                     }
                 }
-                
+
                 if isExpanded {
                     Text(metric.description)
                         .font(.system(size: 14))
@@ -890,20 +1213,20 @@ struct RecommendationsSection: View {
                 .font(.system(size: 20, weight: .bold))
                 .foregroundColor(.white)
                 .padding(.horizontal, 4)
-            
+
             VStack(spacing: 12) {
                 RecommendationCard(
                     icon: "person.crop.circle.badge.checkmark",
                     title: "Ergonomic Setup",
                     description: "Adjust your monitor to eye level and keep feet flat on floor."
                 )
-                
+
                 RecommendationCard(
                     icon: "timer",
                     title: "Take Breaks",
                     description: "Stand and stretch every 30 minutes to reduce muscle tension."
                 )
-                
+
                 RecommendationCard(
                     icon: "figure.walk",
                     title: "Core Exercises",
@@ -927,7 +1250,7 @@ struct RecommendationCard: View {
     let icon: String
     let title: String
     let description: String
-    
+
     var body: some View {
         HStack(spacing: 14) {
             Image(systemName: icon)
@@ -938,20 +1261,20 @@ struct RecommendationCard: View {
                     RoundedRectangle(cornerRadius: 12)
                         .fill(Color.cyan.opacity(0.1))
                 )
-            
+
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundColor(.white)
-                
+
                 Text(description)
                     .font(.system(size: 13))
                     .foregroundColor(.gray)
                     .fixedSize(horizontal: false, vertical: true)
             }
-            
+
             Spacer()
-            
+
             Image(systemName: "chevron.right")
                 .foregroundColor(.gray)
                 .font(.system(size: 14))
@@ -970,7 +1293,7 @@ struct ActionButtonsSection: View {
     let onScanAgain: () -> Void
     @State private var primaryButtonScale: CGFloat = 1.0
     @State private var shareButtonScale: CGFloat = 1.0
-    
+
     var body: some View {
         VStack(spacing: 12) {
             // Scan Again Button
@@ -1003,7 +1326,7 @@ struct ActionButtonsSection: View {
                 .shadow(color: .blue.opacity(0.4), radius: 12, x: 0, y: 4)
             }
             .scaleEffect(primaryButtonScale)
-            
+
             // Share Button
             Button(action: {
                 HapticManager.shared.lightFeedback()

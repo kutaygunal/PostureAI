@@ -1,0 +1,40 @@
+{
+  "source": "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/PostureAI/Sources/Views/EnhancedOnboardingView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Step %lld of %lld",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 84
+        }
+      },
+      {
+        "comment": "",
+        "key": "Skip",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 62
+        }
+      },
+      {
+        "comment": "",
+        "key": "Get Started",
+        "location": {
+          "startingColumn": 47,
+          "startingLine": 108
+        }
+      },
+      {
+        "comment": "",
+        "key": "Continue",
+        "location": {
+          "startingColumn": 63,
+          "startingLine": 108
+        }
+      }
+    ]
+  },
+  "version": 1
+}

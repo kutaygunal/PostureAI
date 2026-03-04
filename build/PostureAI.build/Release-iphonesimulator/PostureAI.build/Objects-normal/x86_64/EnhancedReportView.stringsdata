@@ -1,0 +1,208 @@
+{
+  "source": "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/PostureAI/Sources/Views/EnhancedReportView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "View Mode",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 53
+        }
+      },
+      {
+        "comment": "",
+        "key": "Side View",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 54
+        }
+      },
+      {
+        "comment": "",
+        "key": "Front View",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 55
+        }
+      },
+      {
+        "comment": "",
+        "key": "Posture Analysis",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 484
+        }
+      },
+      {
+        "comment": "",
+        "key": "Results are for informational purposes. Consult a professional for medical advice.",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 502
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 569
+        }
+      },
+      {
+        "comment": "",
+        "key": "/ 100",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 573
+        }
+      },
+      {
+        "comment": "",
+        "key": "Side View Analysis",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 621
+        }
+      },
+      {
+        "comment": "",
+        "key": "No Image",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 643
+        }
+      },
+      {
+        "comment": "",
+        "key": "Front View Analysis",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 693
+        }
+      },
+      {
+        "comment": "",
+        "key": "No Image",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 715
+        }
+      },
+      {
+        "comment": "",
+        "key": "Side View Analysis",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 780
+        }
+      },
+      {
+        "comment": "",
+        "key": "Reference",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 818
+        }
+      },
+      {
+        "comment": "",
+        "key": "Ideal",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 808
+        }
+      },
+      {
+        "comment": "",
+        "key": "Your Pose",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 852
+        }
+      },
+      {
+        "comment": "",
+        "key": "No Image",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 843
+        }
+      },
+      {
+        "comment": "",
+        "key": "Front View Analysis",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 889
+        }
+      },
+      {
+        "comment": "",
+        "key": "Reference",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 948
+        }
+      },
+      {
+        "comment": "",
+        "key": "Ideal",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 938
+        }
+      },
+      {
+        "comment": "",
+        "key": "Your Pose",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 982
+        }
+      },
+      {
+        "comment": "",
+        "key": "No Image",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 973
+        }
+      },
+      {
+        "comment": "",
+        "key": "Detailed Analysis",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 1104
+        }
+      },
+      {
+        "comment": "",
+        "key": "Recommendations",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 1207
+        }
+      },
+      {
+        "comment": "",
+        "key": "Scan Again",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 1307
+        }
+      },
+      {
+        "comment": "",
+        "key": "Share Report",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 1337
+        }
+      }
+    ]
+  },
+  "version": 1
+}

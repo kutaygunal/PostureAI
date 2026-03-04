@@ -133,9 +133,15 @@ struct EnhancedScanView: View {
         .onAppear {
             setupCallbacks()
             animateEntrance()
+            // Prevent screen from dimming during camera use
+            UIApplication.shared.isIdleTimerDisabled = true
+            // Reset view model state when coming back (e.g., from Scan Again)
+            viewModel.reset()
         }
         .onDisappear {
             HapticManager.shared.stopFeedback()
+            // Re-enable idle timer when leaving camera view
+            UIApplication.shared.isIdleTimerDisabled = false
         }
     }
     

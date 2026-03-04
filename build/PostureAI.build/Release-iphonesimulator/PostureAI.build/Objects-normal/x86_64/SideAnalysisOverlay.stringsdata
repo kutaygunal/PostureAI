@@ -1,0 +1,32 @@
+{
+  "source": "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/PostureAI/Sources/Views/SideAnalysisOverlay.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Plumb Line Analysis",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 169
+        }
+      },
+      {
+        "comment": "",
+        "key": "Ideal",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 179
+        }
+      },
+      {
+        "comment": "",
+        "key": "Actual",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 188
+        }
+      }
+    ]
+  },
+  "version": 1
+}

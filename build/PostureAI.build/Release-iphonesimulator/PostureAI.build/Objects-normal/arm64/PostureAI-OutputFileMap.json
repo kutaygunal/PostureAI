@@ -1,0 +1,121 @@
+{
+  "" : {
+    "const-values" : "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/build/PostureAI.build/Release-iphonesimulator/PostureAI.build/Objects-normal/arm64/PostureAI-primary.swiftconstvalues",
+    "dependencies" : "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/build/PostureAI.build/Release-iphonesimulator/PostureAI.build/Objects-normal/arm64/PostureAI-primary.d",
+    "diagnostics" : "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/build/PostureAI.build/Release-iphonesimulator/PostureAI.build/Objects-normal/arm64/PostureAI-primary.dia",
+    "emit-module-dependencies" : "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/build/PostureAI.build/Release-iphonesimulator/PostureAI.build/Objects-normal/arm64/PostureAI-primary-emit-module.d",
+    "emit-module-diagnostics" : "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/build/PostureAI.build/Release-iphonesimulator/PostureAI.build/Objects-normal/arm64/PostureAI-primary-emit-module.dia",
+    "pch" : "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/build/PostureAI.build/Release-iphonesimulator/PostureAI.build/Objects-normal/arm64/PostureAI-primary-Bridging-header.pch",
+    "swift-dependencies" : "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/build/PostureAI.build/Release-iphonesimulator/PostureAI.build/Objects-normal/arm64/PostureAI-primary.swiftdeps"
+  },
+  "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/PostureAI/Sources/App/PostureAIApp.swift" : {
+    "index-unit-output-path" : "/PostureAI.build/Release-iphonesimulator/PostureAI.build/Objects-normal/arm64/PostureAIApp.o",
+    "llvm-bc" : "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/build/PostureAI.build/Release-iphonesimulator/PostureAI.build/Objects-normal/arm64/PostureAIApp.bc",
+    "object" : "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/build/PostureAI.build/Release-iphonesimulator/PostureAI.build/Objects-normal/arm64/PostureAIApp.o"
+  },
+  "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/PostureAI/Sources/Components/ScanningAnimationView.swift" : {
+    "index-unit-output-path" : "/PostureAI.build/Release-iphonesimulator/PostureAI.build/Objects-normal/arm64/ScanningAnimationView.o",
+    "llvm-bc" : "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/build/PostureAI.build/Release-iphonesimulator/PostureAI.build/Objects-normal/arm64/ScanningAnimationView.bc",
+    "object" : "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/build/PostureAI.build/Release-iphonesimulator/PostureAI.build/Objects-normal/arm64/ScanningAnimationView.o"
+  },
+  "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/PostureAI/Sources/Models/Models.swift" : {
+    "index-unit-output-path" : "/PostureAI.build/Release-iphonesimulator/PostureAI.build/Objects-normal/arm64/Models.o",
+    "llvm-bc" : "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/build/PostureAI.build/Release-iphonesimulator/PostureAI.build/Objects-normal/arm64/Models.bc",
+    "object" : "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/build/PostureAI.build/Release-iphonesimulator/PostureAI.build/Objects-normal/arm64/Models.o"
+  },
+  "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/PostureAI/Sources/Services/AudioManager.swift" : {
+    "index-unit-output-path" : "/PostureAI.build/Release-iphonesimulator/PostureAI.build/Objects-normal/arm64/AudioManager.o",
+    "llvm-bc" : "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/build/PostureAI.build/Release-iphonesimulator/PostureAI.build/Objects-normal/arm64/AudioManager.bc",
+    "object" : "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/build/PostureAI.build/Release-iphonesimulator/PostureAI.build/Objects-normal/arm64/AudioManager.o"
+  },
+  "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/PostureAI/Sources/Services/CameraManager.swift" : {
+    "index-unit-output-path" : "/PostureAI.build/Release-iphonesimulator/PostureAI.build/Objects-normal/arm64/CameraManager.o",
+    "llvm-bc" : "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/build/PostureAI.build/Release-iphonesimulator/PostureAI.build/Objects-normal/arm64/CameraManager.bc",
+    "object" : "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/build/PostureAI.build/Release-iphonesimulator/PostureAI.build/Objects-normal/arm64/CameraManager.o"
+  },
+  "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/PostureAI/Sources/Services/EnhancedPostureAnalyzer.swift" : {
+    "index-unit-output-path" : "/PostureAI.build/Release-iphonesimulator/PostureAI.build/Objects-normal/arm64/EnhancedPostureAnalyzer.o",
+    "llvm-bc" : "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/build/PostureAI.build/Release-iphonesimulator/PostureAI.build/Objects-normal/arm64/EnhancedPostureAnalyzer.bc",
+    "object" : "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/build/PostureAI.build/Release-iphonesimulator/PostureAI.build/Objects-normal/arm64/EnhancedPostureAnalyzer.o"
+  },
+  "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/PostureAI/Sources/Services/HapticManager.swift" : {
+    "index-unit-output-path" : "/PostureAI.build/Release-iphonesimulator/PostureAI.build/Objects-normal/arm64/HapticManager.o",
+    "llvm-bc" : "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/build/PostureAI.build/Release-iphonesimulator/PostureAI.build/Objects-normal/arm64/HapticManager.bc",
+    "object" : "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/build/PostureAI.build/Release-iphonesimulator/PostureAI.build/Objects-normal/arm64/HapticManager.o"
+  },
+  "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/PostureAI/Sources/Services/PoseEstimator.swift" : {
+    "index-unit-output-path" : "/PostureAI.build/Release-iphonesimulator/PostureAI.build/Objects-normal/arm64/PoseEstimator.o",
+    "llvm-bc" : "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/build/PostureAI.build/Release-iphonesimulator/PostureAI.build/Objects-normal/arm64/PoseEstimator.bc",
+    "object" : "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/build/PostureAI.build/Release-iphonesimulator/PostureAI.build/Objects-normal/arm64/PoseEstimator.o"
+  },
+  "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/PostureAI/Sources/Services/PostureAnalyzer.swift" : {
+    "index-unit-output-path" : "/PostureAI.build/Release-iphonesimulator/PostureAI.build/Objects-normal/arm64/PostureAnalyzer.o",
+    "llvm-bc" : "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/build/PostureAI.build/Release-iphonesimulator/PostureAI.build/Objects-normal/arm64/PostureAnalyzer.bc",
+    "object" : "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/build/PostureAI.build/Release-iphonesimulator/PostureAI.build/Objects-normal/arm64/PostureAnalyzer.o"
+  },
+  "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/PostureAI/Sources/ViewModels/ScanViewModel.swift" : {
+    "index-unit-output-path" : "/PostureAI.build/Release-iphonesimulator/PostureAI.build/Objects-normal/arm64/ScanViewModel.o",
+    "llvm-bc" : "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/build/PostureAI.build/Release-iphonesimulator/PostureAI.build/Objects-normal/arm64/ScanViewModel.bc",
+    "object" : "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/build/PostureAI.build/Release-iphonesimulator/PostureAI.build/Objects-normal/arm64/ScanViewModel.o"
+  },
+  "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/PostureAI/Sources/Views/ContentView.swift" : {
+    "index-unit-output-path" : "/PostureAI.build/Release-iphonesimulator/PostureAI.build/Objects-normal/arm64/ContentView.o",
+    "llvm-bc" : "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/build/PostureAI.build/Release-iphonesimulator/PostureAI.build/Objects-normal/arm64/ContentView.bc",
+    "object" : "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/build/PostureAI.build/Release-iphonesimulator/PostureAI.build/Objects-normal/arm64/ContentView.o"
+  },
+  "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/PostureAI/Sources/Views/EnhancedOnboardingView.swift" : {
+    "index-unit-output-path" : "/PostureAI.build/Release-iphonesimulator/PostureAI.build/Objects-normal/arm64/EnhancedOnboardingView.o",
+    "llvm-bc" : "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/build/PostureAI.build/Release-iphonesimulator/PostureAI.build/Objects-normal/arm64/EnhancedOnboardingView.bc",
+    "object" : "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/build/PostureAI.build/Release-iphonesimulator/PostureAI.build/Objects-normal/arm64/EnhancedOnboardingView.o"
+  },
+  "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/PostureAI/Sources/Views/EnhancedReportView.swift" : {
+    "index-unit-output-path" : "/PostureAI.build/Release-iphonesimulator/PostureAI.build/Objects-normal/arm64/EnhancedReportView.o",
+    "llvm-bc" : "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/build/PostureAI.build/Release-iphonesimulator/PostureAI.build/Objects-normal/arm64/EnhancedReportView.bc",
+    "object" : "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/build/PostureAI.build/Release-iphonesimulator/PostureAI.build/Objects-normal/arm64/EnhancedReportView.o"
+  },
+  "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/PostureAI/Sources/Views/EnhancedScanView.swift" : {
+    "index-unit-output-path" : "/PostureAI.build/Release-iphonesimulator/PostureAI.build/Objects-normal/arm64/EnhancedScanView.o",
+    "llvm-bc" : "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/build/PostureAI.build/Release-iphonesimulator/PostureAI.build/Objects-normal/arm64/EnhancedScanView.bc",
+    "object" : "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/build/PostureAI.build/Release-iphonesimulator/PostureAI.build/Objects-normal/arm64/EnhancedScanView.o"
+  },
+  "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/PostureAI/Sources/Views/HeightInputView.swift" : {
+    "index-unit-output-path" : "/PostureAI.build/Release-iphonesimulator/PostureAI.build/Objects-normal/arm64/HeightInputView.o",
+    "llvm-bc" : "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/build/PostureAI.build/Release-iphonesimulator/PostureAI.build/Objects-normal/arm64/HeightInputView.bc",
+    "object" : "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/build/PostureAI.build/Release-iphonesimulator/PostureAI.build/Objects-normal/arm64/HeightInputView.o"
+  },
+  "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/PostureAI/Sources/Views/OnboardingView.swift" : {
+    "index-unit-output-path" : "/PostureAI.build/Release-iphonesimulator/PostureAI.build/Objects-normal/arm64/OnboardingView.o",
+    "llvm-bc" : "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/build/PostureAI.build/Release-iphonesimulator/PostureAI.build/Objects-normal/arm64/OnboardingView.bc",
+    "object" : "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/build/PostureAI.build/Release-iphonesimulator/PostureAI.build/Objects-normal/arm64/OnboardingView.o"
+  },
+  "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/PostureAI/Sources/Views/ReportView.swift" : {
+    "index-unit-output-path" : "/PostureAI.build/Release-iphonesimulator/PostureAI.build/Objects-normal/arm64/ReportView.o",
+    "llvm-bc" : "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/build/PostureAI.build/Release-iphonesimulator/PostureAI.build/Objects-normal/arm64/ReportView.bc",
+    "object" : "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/build/PostureAI.build/Release-iphonesimulator/PostureAI.build/Objects-normal/arm64/ReportView.o"
+  },
+  "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/PostureAI/Sources/Views/ScanView.swift" : {
+    "index-unit-output-path" : "/PostureAI.build/Release-iphonesimulator/PostureAI.build/Objects-normal/arm64/ScanView.o",
+    "llvm-bc" : "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/build/PostureAI.build/Release-iphonesimulator/PostureAI.build/Objects-normal/arm64/ScanView.bc",
+    "object" : "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/build/PostureAI.build/Release-iphonesimulator/PostureAI.build/Objects-normal/arm64/ScanView.o"
+  },
+  "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/PostureAI/Sources/Views/SideAnalysisOverlay.swift" : {
+    "index-unit-output-path" : "/PostureAI.build/Release-iphonesimulator/PostureAI.build/Objects-normal/arm64/SideAnalysisOverlay.o",
+    "llvm-bc" : "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/build/PostureAI.build/Release-iphonesimulator/PostureAI.build/Objects-normal/arm64/SideAnalysisOverlay.bc",
+    "object" : "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/build/PostureAI.build/Release-iphonesimulator/PostureAI.build/Objects-normal/arm64/SideAnalysisOverlay.o"
+  },
+  "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/PostureAI/Sources/Views/SilhouetteGuideView.swift" : {
+    "index-unit-output-path" : "/PostureAI.build/Release-iphonesimulator/PostureAI.build/Objects-normal/arm64/SilhouetteGuideView.o",
+    "llvm-bc" : "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/build/PostureAI.build/Release-iphonesimulator/PostureAI.build/Objects-normal/arm64/SilhouetteGuideView.bc",
+    "object" : "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/build/PostureAI.build/Release-iphonesimulator/PostureAI.build/Objects-normal/arm64/SilhouetteGuideView.o"
+  },
+  "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/PostureAI/Sources/Views/SkeletonOverlayView.swift" : {
+    "index-unit-output-path" : "/PostureAI.build/Release-iphonesimulator/PostureAI.build/Objects-normal/arm64/SkeletonOverlayView.o",
+    "llvm-bc" : "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/build/PostureAI.build/Release-iphonesimulator/PostureAI.build/Objects-normal/arm64/SkeletonOverlayView.bc",
+    "object" : "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/build/PostureAI.build/Release-iphonesimulator/PostureAI.build/Objects-normal/arm64/SkeletonOverlayView.o"
+  },
+  "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/build/PostureAI.build/Release-iphonesimulator/PostureAI.build/DerivedSources/GeneratedAssetSymbols.swift" : {
+    "index-unit-output-path" : "/PostureAI.build/Release-iphonesimulator/PostureAI.build/Objects-normal/arm64/GeneratedAssetSymbols.o",
+    "llvm-bc" : "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/build/PostureAI.build/Release-iphonesimulator/PostureAI.build/Objects-normal/arm64/GeneratedAssetSymbols.bc",
+    "object" : "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/build/PostureAI.build/Release-iphonesimulator/PostureAI.build/Objects-normal/arm64/GeneratedAssetSymbols.o"
+  }
+}

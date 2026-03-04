@@ -1,0 +1,48 @@
+{
+  "source": "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/PostureAI/Sources/Views/EnhancedScanView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Starting camera...",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 221
+        }
+      },
+      {
+        "comment": "",
+        "key": "Auto ON",
+        "location": {
+          "startingColumn": 29,
+          "startingLine": 298
+        }
+      },
+      {
+        "comment": "",
+        "key": "Auto OFF",
+        "location": {
+          "startingColumn": 41,
+          "startingLine": 298
+        }
+      },
+      {
+        "comment": "",
+        "key": "View Results",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 498
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 694
+        }
+      }
+    ]
+  },
+  "version": 1
+}

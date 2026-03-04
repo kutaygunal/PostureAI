@@ -65,7 +65,7 @@ struct ReportView: View {
 
                     VStack(alignment: .leading, spacing: 12) {
                         ReportDetailRow(icon: "figure.stand", title: "Overall Posture", value: "Analyzing...", status: .neutral)
-                        ReportDetailRow(icon: "head.side", title: "Head Position", value: "Analyzing...", status: .neutral)
+                        ReportDetailRow(icon: "person.fill", title: "Head Position", value: "Analyzing...", status: .neutral)
                         ReportDetailRow(icon: "arrow.left.and.right", title: "Shoulder Alignment", value: "Analyzing...", status: .neutral)
                         ReportDetailRow(icon: "figure.walk", title: "Hip Position", value: "Analyzing...", status: .neutral)
                     }

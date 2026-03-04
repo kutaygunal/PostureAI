@@ -1,0 +1,12 @@
+{
+  "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/PostureAI/Sources/App/PostureAIApp.swift" : {
+    "abi-baseline-json" : "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/build/PostureAI.build/Release-iphonesimulator/PostureAI.build/Objects-normal/x86_64/PostureAI.abi.json",
+    "const-values" : "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/build/PostureAI.build/Release-iphonesimulator/PostureAI.build/Objects-normal/x86_64/PostureAI-primary.swiftconstvalues",
+    "dependencies" : "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/build/PostureAI.build/Release-iphonesimulator/PostureAI.build/Objects-normal/x86_64/PostureAI-primary.d",
+    "diagnostics" : "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/build/PostureAI.build/Release-iphonesimulator/PostureAI.build/Objects-normal/x86_64/PostureAI-primary.dia",
+    "objc-header" : "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/build/PostureAI.build/Release-iphonesimulator/PostureAI.build/Objects-normal/x86_64/PostureAI-Swift.h",
+    "swiftdoc" : "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/build/PostureAI.build/Release-iphonesimulator/PostureAI.build/Objects-normal/x86_64/PostureAI.swiftdoc",
+    "swiftmodule" : "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/build/PostureAI.build/Release-iphonesimulator/PostureAI.build/Objects-normal/x86_64/PostureAI.swiftmodule",
+    "swiftsourceinfo" : "/Users/kutaygunal/Desktop/PostureAIApp/PostureAI/build/PostureAI.build/Release-iphonesimulator/PostureAI.build/Objects-normal/x86_64/PostureAI.swiftsourceinfo"
+  }
+}
