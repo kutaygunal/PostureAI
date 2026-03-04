@@ -156,13 +156,15 @@ struct EnhancedScanView: View {
     }
     
     private func setupCallbacks() {
-        viewModel.onFrontCaptured = { url in
+        viewModel.onFrontCaptured = { url, pose in
             appState.capturedFrontImageURL = url
+            appState.capturedFrontPose = pose
             triggerSuccessAnimation()
         }
         
-        viewModel.onSideCaptured = { url in
+        viewModel.onSideCaptured = { url, pose in
             appState.capturedSideImageURL = url
+            appState.capturedSidePose = pose
             triggerSuccessAnimation()
         }
     }

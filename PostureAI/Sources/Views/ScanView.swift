@@ -156,11 +156,13 @@ struct ScanView: View {
     }
 
     private func setupCallbacks() {
-        viewModel.onFrontCaptured = { url in
+        viewModel.onFrontCaptured = { url, pose in
             appState.capturedFrontImageURL = url
+            appState.capturedFrontPose = pose
         }
-        viewModel.onSideCaptured = { url in
+        viewModel.onSideCaptured = { url, pose in
             appState.capturedSideImageURL = url
+            appState.capturedSidePose = pose
         }
     }
 

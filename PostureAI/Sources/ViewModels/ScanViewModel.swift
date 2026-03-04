@@ -37,8 +37,8 @@ class ScanViewModel: ObservableObject {
     private var countdownTask: Task<Void, Never>?
     private var cooldownTask: Task<Void, Never>?
     
-    var onFrontCaptured: ((URL) -> Void)?
-    var onSideCaptured: ((URL) -> Void)?
+    var onFrontCaptured: ((URL, PoseData) -> Void)?
+    var onSideCaptured: ((URL, PoseData) -> Void)?
     
     // MARK: - Init
     init(cameraManager: CameraManager, poseEstimator: PoseEstimator) {
@@ -196,6 +196,9 @@ class ScanViewModel: ObservableObject {
     private func performCapture() async {
         guard case .counting = state else { return }
         
+        // Store the current pose BEFORE capture (it will still be valid)
+        let capturedPose = poseEstimator.currentPose
+        
         state = .capturing
         countdownValue = nil
         isCapturing = true
@@ -213,11 +216,11 @@ class ScanViewModel: ObservableObject {
             }
         }
         
-        // Now save the captured image
-        await saveCapturedImage()
+        // Now save the captured image with pose data
+        await saveCapturedImage(capturedPose: capturedPose)
     }
     
-    private func saveCapturedImage() async {
+    private func saveCapturedImage(capturedPose: PoseData?) async {
         // Wait a moment for the delegate to set the image
         var attempts = 0
         while cameraManager.capturedImage == nil && attempts < 10 {
@@ -240,7 +243,7 @@ class ScanViewModel: ObservableObject {
             
             if currentMode == .front {
                 frontCaptured = true
-                onFrontCaptured?(url)
+                onFrontCaptured?(url, capturedPose ?? PoseData())
                 
                 // Automatically switch to side mode after front capture
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
@@ -248,7 +251,7 @@ class ScanViewModel: ObservableObject {
                 }
             } else {
                 sideCaptured = true
-                onSideCaptured?(url)
+                onSideCaptured?(url, capturedPose ?? PoseData())
             }
         }
         

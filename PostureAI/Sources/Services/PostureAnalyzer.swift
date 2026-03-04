@@ -91,6 +91,153 @@ class PostureAnalyzer {
         return estimatedCm
     }
 
+    // MARK: - Front View Analysis (Asymmetry Detection)
+
+    /// Calculate shoulder tilt from horizontal (for front view)
+    /// Returns: angle in degrees (0 = level, positive = right higher, negative = left higher)
+    static func calculateShoulderTilt(from pose: PoseData) -> Double {
+        guard let leftShoulder = pose.joint(.leftShoulder),
+              let rightShoulder = pose.joint(.rightShoulder) else {
+            return 0
+        }
+
+        // Calculate angle between shoulders and horizontal
+        let dx = rightShoulder.position.x - leftShoulder.position.x
+        let dy = rightShoulder.position.y - leftShoulder.position.y
+
+        // Angle from horizontal (positive = right shoulder higher)
+        let angleRadians = atan2(dy, dx)
+        let angleDegrees = angleRadians * 180.0 / .pi
+
+        return angleDegrees
+    }
+
+    /// Calculate hip tilt from horizontal (for front view)
+    static func calculateHipTilt(from pose: PoseData) -> Double {
+        guard let leftHip = pose.joint(.leftHip),
+              let rightHip = pose.joint(.rightHip) else {
+            return 0
+        }
+
+        // Calculate angle between hips and horizontal
+        let dx = rightHip.position.x - leftHip.position.x
+        let dy = rightHip.position.y - leftHip.position.y
+
+        let angleRadians = atan2(dy, dx)
+        let angleDegrees = angleRadians * 180.0 / .pi
+
+        return angleDegrees
+    }
+
+    /// Calculate vertical alignment deviation (spine deviation from center)
+    /// Measures how much the spine deviates from vertical line through center
+    static func calculateSpineDeviation(from pose: PoseData) -> Double {
+        guard let leftShoulder = pose.joint(.leftShoulder),
+              let rightShoulder = pose.joint(.rightShoulder),
+              let leftHip = pose.joint(.leftHip),
+              let rightHip = pose.joint(.rightHip),
+              let root = pose.joint(.root) else {
+            return 0
+        }
+
+        // Find midpoints
+        let shoulderMidX = (leftShoulder.position.x + rightShoulder.position.x) / 2.0
+        let hipMidX = (leftHip.position.x + rightHip.position.x) / 2.0
+
+        // Calculate deviation from vertical (using root as reference)
+        let rootX = root.position.x
+
+        // Average deviation of spine from center
+        let shoulderDeviation = abs(shoulderMidX - rootX)
+        let hipDeviation = abs(hipMidX - rootX)
+        let totalDeviation = (shoulderDeviation + hipDeviation) / 2.0
+
+        return totalDeviation * 100 // Convert to percentage/pixels
+    }
+
+    /// Analyze front pose for asymmetry detection
+    static func analyzeFrontPose(from pose: PoseData, userHeightCm: Double, frameHeight: Double) -> PostureAnalysis {
+        var analysis = PostureAnalysis()
+
+        // Front view specific metrics
+        let shoulderTilt = calculateShoulderTilt(from: pose)
+        let hipTilt = calculateHipTilt(from: pose)
+        let spineDev = calculateSpineDeviation(from: pose)
+
+        // Convert to estimated cm
+        let pixelToCmRatio = userHeightCm / Double(frameHeight)
+
+        analysis.shoulderForwardOffset = abs(shoulderTilt) * pixelToCmRatio * 10 // Approximate
+        analysis.headTiltAngle = shoulderTilt // Reuse for display
+        analysis.hipOffset = abs(hipTilt) * pixelToCmRatio * 10 // Approximate
+
+        // Determine status based on thresholds
+        // Shoulder tilt thresholds: < 2° good, 2-5° mild, > 5° severe
+        analysis.shoulderOffsetStatus = categorizeOffset(abs(shoulderTilt), thresholds: [2.0, 5.0])
+
+        // Hip tilt thresholds: < 2° good, 2-5° mild, > 5° severe
+        analysis.hipOffsetStatus = categorizeOffset(abs(hipTilt), thresholds: [2.0, 5.0])
+
+        // Head/spine status
+        analysis.headTiltStatus = categorizeOffset(spineDev, thresholds: [3.0, 8.0])
+
+        return analysis
+    }
+
+    // MARK: - Score Calculation
+
+    /// Calculate overall posture score from analysis
+    /// Returns: score 0-100, where 100 is perfect posture
+    static func calculateOverallScore(frontAnalysis: PostureAnalysis, sideAnalysis: PostureAnalysis) -> Int {
+        var score = 100
+
+        // Penalty for front view issues
+        // Shoulder asymmetry
+        switch frontAnalysis.shoulderOffsetStatus {
+        case .mild: score -= 10
+        case .severe: score -= 25
+        case .good, .neutral: break
+        }
+
+        // Hip asymmetry
+        switch frontAnalysis.hipOffsetStatus {
+        case .mild: score -= 8
+        case .severe: score -= 20
+        case .good, .neutral: break
+        }
+
+        // Head/spine deviation
+        switch frontAnalysis.headTiltStatus {
+        case .mild: score -= 5
+        case .severe: score -= 15
+        case .good, .neutral: break
+        }
+
+        // Penalty for side view issues
+        // Forward head posture
+        switch sideAnalysis.headTiltStatus {
+        case .mild: score -= 12
+        case .severe: score -= 30
+        case .good, .neutral: break
+        }
+
+        // Shoulder forward
+        switch sideAnalysis.shoulderOffsetStatus {
+        case .mild: score -= 8
+        case .severe: score -= 20
+        case .good, .neutral: break
+        }
+
+        // Hip forward
+        switch sideAnalysis.hipOffsetStatus {
+        case .mild: score -= 5
+        case .severe: score -= 15
+        case .good, .neutral: break
+        }
+
+        return max(0, min(100, score))
+    }
+
     // MARK: - Full Analysis
 
     static func analyzeSidePose(from pose: PoseData, userHeightCm: Double, frameHeight: Double) -> PostureAnalysis {

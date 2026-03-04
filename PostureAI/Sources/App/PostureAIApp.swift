@@ -22,6 +22,8 @@ class AppState: ObservableObject {
 
     @Published var capturedFrontImageURL: URL?
     @Published var capturedSideImageURL: URL?
+    @Published var capturedFrontPose: PoseData?
+    @Published var capturedSidePose: PoseData?
     @Published var userHeightCm: Double = 170.0
 
     init() {
@@ -31,6 +33,8 @@ class AppState: ObservableObject {
     func reset() {
         capturedFrontImageURL = nil
         capturedSideImageURL = nil
+        capturedFrontPose = nil
+        capturedSidePose = nil
         userHeightCm = 170.0
     }
 }

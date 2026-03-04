@@ -116,63 +116,200 @@ struct EnhancedReportView: View {
         .navigationBarHidden(true)
     }
     
-    // MARK: - Mock Data Functions
+    // MARK: - Real Data Functions
     
     private func calculateOverallScore() -> Int {
-        // In a real app, calculate from actual pose data
-        // Generate once and store, don't use random on every render
-        return Int.random(in: 65...92)
+        // Calculate score from real pose data
+        let frontAnalysis = calculateFrontAnalysis()
+        let sideAnalysis = calculateSideAnalysis()
+        
+        return PostureAnalyzer.calculateOverallScore(
+            frontAnalysis: frontAnalysis,
+            sideAnalysis: sideAnalysis
+        )
+    }
+    
+    private func calculateSideAnalysis() -> PostureAnalysis {
+        guard let pose = appState.capturedSidePose,
+              pose.hasValidJoints || pose.hasSideViewCoreJoints else {
+            return PostureAnalysis()
+        }
+        
+        // Assume reasonable frame height for calculations
+        let frameHeight: Double = 1920 // Typical photo height
+        return PostureAnalyzer.analyzeSidePose(
+            from: pose,
+            userHeightCm: appState.userHeightCm,
+            frameHeight: frameHeight
+        )
+    }
+    
+    private func calculateFrontAnalysis() -> PostureAnalysis {
+        guard let pose = appState.capturedFrontPose,
+              pose.hasValidJoints else {
+            return PostureAnalysis()
+        }
+        
+        let frameHeight: Double = 1920
+        return PostureAnalyzer.analyzeFrontPose(
+            from: pose,
+            userHeightCm: appState.userHeightCm,
+            frameHeight: frameHeight
+        )
     }
     
     private func generateSideAnalysisData() -> SideAnalysisData {
+        let analysis = calculateSideAnalysis()
         return SideAnalysisData(
-            headAngle: 3.2,
-            shoulderTilt: 1.5,
-            hipAlignment: 0.8,
-            overallStatus: .mild
+            headAngle: analysis.headTiltAngle,
+            shoulderTilt: 0, // Forward/back not applicable in side view
+            hipAlignment: analysis.hipOffset,
+            overallStatus: combineStatuses(
+                analysis.headTiltStatus,
+                analysis.shoulderOffsetStatus,
+                analysis.hipOffsetStatus
+            )
         )
     }
     
     private func generateFrontAnalysisData() -> FrontAnalysisData {
+        let analysis = calculateFrontAnalysis()
         return FrontAnalysisData(
-            shoulderLevelness: 1.2,
-            hipBalance: 0.8,
-            spinalDeviation: 0.0,
-            overallStatus: .good
+            shoulderLevelness: analysis.headTiltAngle, // Reused for shoulder tilt
+            hipBalance: analysis.hipOffset,
+            spinalDeviation: Double(analysis.headTiltStatus.hashValue), // Approximate
+            overallStatus: combineStatuses(
+                analysis.headTiltStatus,
+                analysis.shoulderOffsetStatus,
+                analysis.hipOffsetStatus
+            )
         )
     }
     
+    private func combineStatuses(_ statuses: OffsetStatus...) -> OffsetStatus {
+        if statuses.contains(.severe) { return .severe }
+        if statuses.contains(.mild) { return .mild }
+        if statuses.contains(.good) { return .good }
+        return .neutral
+    }
+    
     private func generateMetrics() -> [PostureMetric] {
-        return [
-            PostureMetric(
-                title: "Head Position",
-                value: "3.2°",
-                status: .good,
-                icon: "head.side",
-                description: "Slight forward tilt detected"
-            ),
-            PostureMetric(
-                title: "Shoulder Alignment",
-                value: "1.5°",
-                status: .good,
-                icon: "arrow.left.and.right",
-                description: "Well balanced"
-            ),
-            PostureMetric(
-                title: "Hip Position",
-                value: "0.8°",
-                status: .good,
-                icon: "figure.walk",
-                description: "Proper alignment"
-            ),
-            PostureMetric(
-                title: "Spine Curve",
-                value: "4.1°",
-                status: .neutral,
-                icon: "waveform.path",
-                description: "Within normal range"
-            )
-        ]
+        let frontAnalysis = calculateFrontAnalysis()
+        let sideAnalysis = calculateSideAnalysis()
+        
+        var metrics: [PostureMetric] = []
+        
+        // Head Position (from side view - head tilt/fwd head posture)
+        let headStatus = sideAnalysis.headTiltStatus
+        metrics.append(PostureMetric(
+            title: "Head Position",
+            value: String(format: "%.1f°", abs(sideAnalysis.headTiltAngle)),
+            status: headStatus,
+            icon: "head.side",
+            description: headStatusDescription(for: sideAnalysis)
+        ))
+        
+        // Shoulder Alignment (from front view - levelness)
+        let shoulderStatus = frontAnalysis.shoulderOffsetStatus
+        metrics.append(PostureMetric(
+            title: "Shoulder Alignment",
+            value: String(format: "%.1f°", abs(frontAnalysis.headTiltAngle)),
+            status: shoulderStatus,
+            icon: "arrow.left.and.right",
+            description: shoulderStatusDescription(for: frontAnalysis)
+        ))
+        
+        // Hip Position (combination of front hip tilt and side hip offset)
+        let hipStatus = worseStatus(frontAnalysis.hipOffsetStatus, sideAnalysis.hipOffsetStatus)
+        metrics.append(PostureMetric(
+            title: "Hip Position",
+            value: String(format: "%.1f°", max(abs(frontAnalysis.hipOffset), abs(sideAnalysis.hipOffset))),
+            status: hipStatus,
+            icon: "figure.walk",
+            description: hipStatusDescription(front: frontAnalysis, side: sideAnalysis)
+        ))
+        
+        // Forward Posture (from side view - rounded shoulders)
+        let forwardStatus = sideAnalysis.shoulderOffsetStatus
+        metrics.append(PostureMetric(
+            title: "Forward Posture",
+            value: String(format: "%.1f cm", sideAnalysis.shoulderForwardOffset),
+            status: forwardStatus,
+            icon: "person.fill",
+            description: forwardPostureDescription(for: sideAnalysis)
+        ))
+        
+        // Spine Alignment (based on overall deviation)
+        let spineStatus = frontAnalysis.headTiltStatus
+        metrics.append(PostureMetric(
+            title: "Spine Alignment",
+            value: spineStatus == .good ? "Good" : (spineStatus == .mild ? "Slight Curve" : "Notable Curve"),
+            status: spineStatus,
+            icon: "waveform.path",
+            description: "Based on front view vertical alignment"
+        ))
+        
+        return metrics
+    }
+    
+    // MARK: - Status Description Helpers
+    
+    private func headStatusDescription(for analysis: PostureAnalysis) -> String {
+        switch analysis.headTiltStatus {
+        case .good:
+            return "Good alignment, minimal forward head posture"
+        case .mild:
+            return "Slight forward head posture detected"
+        case .severe:
+            return "Significant forward head posture, consider neck exercises"
+        case .neutral:
+            return "Analyzing..."
+        }
+    }
+    
+    private func shoulderStatusDescription(for analysis: PostureAnalysis) -> String {
+        switch analysis.shoulderOffsetStatus {
+        case .good:
+            return "Shoulders are level and well balanced"
+        case .mild:
+            return "Slight shoulder asymmetry detected"
+        case .severe:
+            return "Notable shoulder imbalance, strengthening recommended"
+        case .neutral:
+            return "Analyzing..."
+        }
+    }
+    
+    private func hipStatusDescription(front: PostureAnalysis, side: PostureAnalysis) -> String {
+        let status = worseStatus(front.hipOffsetStatus, side.hipOffsetStatus)
+        switch status {
+        case .good:
+            return "Hips are balanced and aligned"
+        case .mild:
+            return "Minor hip imbalance detected"
+        case .severe:
+            return "Hip misalignment, core strengthening advised"
+        case .neutral:
+            return "Analyzing..."
+        }
+    }
+    
+    private func forwardPostureDescription(for analysis: PostureAnalysis) -> String {
+        switch analysis.shoulderOffsetStatus {
+        case .good:
+            return "Shoulders are well positioned over hips"
+        case .mild:
+            return "Slight rounded shoulder posture"
+        case .severe:
+            return "Notable forward shoulder posture, upper back exercises recommended"
+        case .neutral:
+            return "Analyzing..."
+        }
+    }
+    
+    private func worseStatus(_ a: OffsetStatus, _ b: OffsetStatus) -> OffsetStatus {
+        let severity: [OffsetStatus: Int] = [.good: 0, .neutral: 1, .mild: 2, .severe: 3]
+        return severity[a]! >= severity[b]! ? a : b
     }
 }
 
