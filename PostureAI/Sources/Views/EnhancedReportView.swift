@@ -1,14 +1,21 @@
 import SwiftUI
 
+enum EnhancedViewMode {
+    case side
+    case front
+}
+
 // MARK: - Enhanced Report View with Modern UI
 
 struct EnhancedReportView: View {
     @EnvironmentObject var appState: AppState
+    @State private var selectedViewMode: EnhancedViewMode = .side
     @State private var selectedCard: Int? = nil
     @State private var headerOffset: CGFloat = -50
     @State private var headerOpacity: Double = 0
     @State private var cardsOffset: CGFloat = 50
     @State private var cardsOpacity: Double = 0
+    @State private var overallScore: Int = 75 // Fixed score to prevent flickering
     
     private let dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
@@ -34,17 +41,36 @@ struct EnhancedReportView: View {
                 }
                 
                 // Overall Score Card
-                OverallScoreCard(score: calculateOverallScore())
+                OverallScoreCard(score: overallScore)
                     .offset(y: cardsOffset)
                     .opacity(cardsOpacity)
                 
-                // Side by Side Comparison
-                ComparisonSection(
-                    sideImageURL: appState.capturedSideImageURL,
-                    analysisData: generateAnalysisData()
-                )
+                // View Mode Picker
+                Picker("View Mode", selection: $selectedViewMode) {
+                    Text("Side View").tag(EnhancedViewMode.side)
+                    Text("Front View").tag(EnhancedViewMode.front)
+                }
+                .pickerStyle(SegmentedPickerStyle())
+                .padding(.horizontal, 16)
                 .offset(y: cardsOffset)
                 .opacity(cardsOpacity)
+                
+                // Comparison Section based on selected mode
+                if selectedViewMode == .side {
+                    SideComparisonSection(
+                        sideImageURL: appState.capturedSideImageURL,
+                        analysisData: generateSideAnalysisData()
+                    )
+                    .offset(y: cardsOffset)
+                    .opacity(cardsOpacity)
+                } else {
+                    FrontComparisonSection(
+                        frontImageURL: appState.capturedFrontImageURL,
+                        analysisData: generateFrontAnalysisData()
+                    )
+                    .offset(y: cardsOffset)
+                    .opacity(cardsOpacity)
+                }
                 
                 // Detailed Metrics
                 DetailedMetricsSection(metrics: generateMetrics())
@@ -66,6 +92,9 @@ struct EnhancedReportView: View {
             }
             .padding(.horizontal, 16)
             .onAppear {
+                // Calculate score once when view appears
+                overallScore = calculateOverallScore()
+                
                 withAnimation(.spring(response: 0.6, dampingFraction: 0.8).delay(0.1)) {
                     cardsOffset = 0
                     cardsOpacity = 1
@@ -91,15 +120,25 @@ struct EnhancedReportView: View {
     
     private func calculateOverallScore() -> Int {
         // In a real app, calculate from actual pose data
+        // Generate once and store, don't use random on every render
         return Int.random(in: 65...92)
     }
     
-    private func generateAnalysisData() -> AnalysisData {
-        return AnalysisData(
+    private func generateSideAnalysisData() -> SideAnalysisData {
+        return SideAnalysisData(
             headAngle: 3.2,
             shoulderTilt: 1.5,
             hipAlignment: 0.8,
             overallStatus: .mild
+        )
+    }
+    
+    private func generateFrontAnalysisData() -> FrontAnalysisData {
+        return FrontAnalysisData(
+            shoulderLevelness: 1.2,
+            hipBalance: 0.8,
+            spinalDeviation: 0.0,
+            overallStatus: .good
         )
     }
     
@@ -275,11 +314,11 @@ struct OverallScoreCard: View {
     }
 }
 
-// MARK: - Comparison Section
+// MARK: - Side Comparison Section
 
-struct ComparisonSection: View {
+struct SideComparisonSection: View {
     let sideImageURL: URL?
-    let analysisData: AnalysisData
+    let analysisData: SideAnalysisData
     
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -352,7 +391,7 @@ struct ComparisonSection: View {
                         }
                         
                         // Analysis overlay
-                        PostureOverlayLines(data: analysisData)
+                        SidePostureOverlayLines(data: analysisData)
                     }
                     
                     Text("Your Pose")
@@ -384,10 +423,140 @@ struct ComparisonSection: View {
     }
 }
 
-// MARK: - Posture Overlay Lines
+// MARK: - Front Comparison Section
 
-struct PostureOverlayLines: View {
-    let data: AnalysisData
+struct FrontComparisonSection: View {
+    let frontImageURL: URL?
+    let analysisData: FrontAnalysisData
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Front View Analysis")
+                .font(.system(size: 20, weight: .bold))
+                .foregroundColor(.white)
+                .padding(.horizontal, 4)
+            
+            // Image comparison
+            HStack(spacing: 12) {
+                // Ideal front pose visualization
+                VStack(spacing: 8) {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 16)
+                            .fill(Color.gray.opacity(0.2))
+                            .frame(height: 180)
+                        
+                        // Front view ideal silhouette
+                        VStack(spacing: 0) {
+                            // Head
+                            Circle()
+                                .fill(Color.gray)
+                                .frame(width: 34, height: 34)
+                            // Neck
+                            Rectangle()
+                                .fill(Color.gray)
+                                .frame(width: 12, height: 16)
+                            // Shoulders - level
+                            HStack(spacing: 0) {
+                                Rectangle()
+                                    .fill(Color.gray)
+                                    .frame(width: 50, height: 10)
+                                    .rotationEffect(.degrees(-8))
+                                Rectangle()
+                                    .fill(Color.gray)
+                                    .frame(width: 16, height: 8)
+                                Rectangle()
+                                    .fill(Color.gray)
+                                    .frame(width: 50, height: 10)
+                                    .rotationEffect(.degrees(8))
+                            }
+                            // Torso
+                            Rectangle()
+                                .fill(Color.gray)
+                                .frame(width: 38, height: 70)
+                            // Hips - balanced
+                            Rectangle()
+                                .fill(Color.gray)
+                                .frame(width: 55, height: 12)
+                        }
+                        .opacity(0.5)
+                        
+                        Text("Ideal")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 4)
+                            .background(Color.gray.opacity(0.5))
+                            .cornerRadius(8)
+                            .position(x: 40, y: 150)
+                    }
+                    
+                    Text("Reference")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(.gray)
+                }
+                
+                // Captured front image
+                VStack(spacing: 8) {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 16)
+                            .fill(Color.gray.opacity(0.2))
+                            .frame(height: 180)
+                        
+                        if let url = frontImageURL,
+                           let imageData = try? Data(contentsOf: url),
+                           let uiImage = UIImage(data: imageData) {
+                            Image(uiImage: uiImage)
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                                .frame(height: 180)
+                                .clipShape(RoundedRectangle(cornerRadius: 16))
+                        } else {
+                            VStack(spacing: 8) {
+                                Image(systemName: "person.fill")
+                                    .font(.system(size: 40))
+                                    .foregroundColor(.gray)
+                                Text("No Image")
+                                    .foregroundColor(.gray)
+                            }
+                        }
+                        
+                        // Analysis overlay for front view
+                        FrontPostureOverlayLines(data: analysisData)
+                    }
+                    
+                    Text("Your Pose")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(.gray)
+                }
+            }
+            
+            // Quick stats for front view
+            let shoulderValue = String(format: "%.1f°", analysisData.shoulderLevelness)
+            let hipValue = String(format: "%.1f°", analysisData.hipBalance)
+            let spineValue = String(format: "%.1f°", analysisData.spinalDeviation)
+            
+            HStack(spacing: 16) {
+                QuickStat(label: "Shoulders", value: shoulderValue)
+                QuickStat(label: "Hips", value: hipValue)
+                QuickStat(label: "Spine", value: spineValue)
+            }
+        }
+        .padding(20)
+        .background(
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .fill(Color.white.opacity(0.05))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 24, style: .continuous)
+                        .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                )
+        )
+    }
+}
+
+// MARK: - Side Posture Overlay Lines
+
+struct SidePostureOverlayLines: View {
+    let data: SideAnalysisData
     
     var body: some View {
         GeometryReader { geometry in
@@ -407,6 +576,42 @@ struct PostureOverlayLines: View {
                         y: geometry.size.height / 2
                     )
                     .rotationEffect(.degrees(Double(data.shoulderTilt)))
+            }
+        }
+    }
+}
+
+// MARK: - Front Posture Overlay Lines
+
+struct FrontPostureOverlayLines: View {
+    let data: FrontAnalysisData
+    
+    var body: some View {
+        GeometryReader { geometry in
+            ZStack {
+                // Vertical center line (ideal)
+                Rectangle()
+                    .fill(Color.green.opacity(0.3))
+                    .frame(width: 2, height: geometry.size.height * 0.6)
+                    .position(x: geometry.size.width / 2, y: geometry.size.height / 2)
+                
+                // Horizontal shoulder reference
+                Rectangle()
+                    .fill(Color.blue.opacity(0.4))
+                    .frame(width: 60, height: 2)
+                    .position(
+                        x: geometry.size.width / 2,
+                        y: geometry.size.height * 0.35
+                    )
+                    
+                // Horizontal hip reference
+                Rectangle()
+                    .fill(Color.blue.opacity(0.4))
+                    .frame(width: 60, height: 2)
+                    .position(
+                        x: geometry.size.width / 2,
+                        y: geometry.size.height * 0.65
+                    )
             }
         }
     }
@@ -696,10 +901,17 @@ struct ActionButtonsSection: View {
 
 // MARK: - Supporting Models
 
-struct AnalysisData {
+struct SideAnalysisData {
     let headAngle: Double
     let shoulderTilt: Double
     let hipAlignment: Double
+    let overallStatus: OffsetStatus
+}
+
+struct FrontAnalysisData {
+    let shoulderLevelness: Double
+    let hipBalance: Double
+    let spinalDeviation: Double
     let overallStatus: OffsetStatus
 }
 
