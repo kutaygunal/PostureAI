@@ -631,14 +631,37 @@ struct EnhancedSideComparisonSection: View {
                     RoundedRectangle(cornerRadius: 16)
                         .fill(Color.gray.opacity(0.2))
 
+                    // Calculate actual image frame for proper overlay positioning
+                    let imageFrame: CGRect
                     if let url = sideImageURL,
                        let imageData = try? Data(contentsOf: url),
                        let uiImage = UIImage(data: imageData) {
+                        let imageSize = uiImage.size
+                        let container = geo.size
+                        let imageAspect = imageSize.width / imageSize.height
+                        let containerAspect = container.width / container.height
+                        
+                        // aspectRatio(contentMode: .fit) calculation
+                        let drawWidth: CGFloat
+                        let drawHeight: CGFloat
+                        if imageAspect > containerAspect {
+                            drawWidth = container.width
+                            drawHeight = container.width / imageAspect
+                        } else {
+                            drawHeight = container.height
+                            drawWidth = container.height * imageAspect
+                        }
+                        
+                        let drawX = (container.width - drawWidth) / 2
+                        let drawY = (container.height - drawHeight) / 2
+                        imageFrame = CGRect(x: drawX, y: drawY, width: drawWidth, height: drawHeight)
+                        
                         Image(uiImage: uiImage)
                             .resizable()
                             .aspectRatio(contentMode: .fit)
                             .clipShape(RoundedRectangle(cornerRadius: 16))
                     } else {
+                        imageFrame = CGRect(origin: .zero, size: geo.size)
                         VStack(spacing: 8) {
                             Image(systemName: "person.fill")
                                 .font(.system(size: 40))
@@ -648,11 +671,16 @@ struct EnhancedSideComparisonSection: View {
                         }
                     }
 
-                    // Enhanced analysis overlay - now using actual container size
+                    // Enhanced analysis overlay - using actual image frame
                     if let metrics = metrics, metrics.hasValidData {
                         SideAnalysisOverlay(
                             metrics: metrics,
-                            imageSize: geo.size
+                            imageSize: imageFrame.size
+                        )
+                        .frame(width: imageFrame.width, height: imageFrame.height)
+                        .position(
+                            x: imageFrame.midX,
+                            y: imageFrame.midY
                         )
                     }
                 }
@@ -705,14 +733,37 @@ struct EnhancedFrontComparisonSection: View {
                     RoundedRectangle(cornerRadius: 16)
                         .fill(Color.gray.opacity(0.2))
 
+                    // Calculate actual image frame for proper overlay positioning
+                    let imageFrame: CGRect
                     if let url = frontImageURL,
                        let imageData = try? Data(contentsOf: url),
                        let uiImage = UIImage(data: imageData) {
+                        let imageSize = uiImage.size
+                        let container = geo.size
+                        let imageAspect = imageSize.width / imageSize.height
+                        let containerAspect = container.width / container.height
+                        
+                        // aspectRatio(contentMode: .fit) calculation
+                        let drawWidth: CGFloat
+                        let drawHeight: CGFloat
+                        if imageAspect > containerAspect {
+                            drawWidth = container.width
+                            drawHeight = container.width / imageAspect
+                        } else {
+                            drawHeight = container.height
+                            drawWidth = container.height * imageAspect
+                        }
+                        
+                        let drawX = (container.width - drawWidth) / 2
+                        let drawY = (container.height - drawHeight) / 2
+                        imageFrame = CGRect(x: drawX, y: drawY, width: drawWidth, height: drawHeight)
+                        
                         Image(uiImage: uiImage)
                             .resizable()
                             .aspectRatio(contentMode: .fit)
                             .clipShape(RoundedRectangle(cornerRadius: 16))
                     } else {
+                        imageFrame = CGRect(origin: .zero, size: geo.size)
                         VStack(spacing: 8) {
                             Image(systemName: "person.fill")
                                 .font(.system(size: 40))
@@ -722,10 +773,14 @@ struct EnhancedFrontComparisonSection: View {
                         }
                     }
 
-                    // Enhanced analysis overlay - now using actual container size
+                    // Enhanced analysis overlay - using actual image frame
                     if let metrics = metrics, metrics.hasValidData {
                         FrontAnalysisOverlay(metrics: metrics)
-                            .frame(width: geo.size.width, height: geo.size.height)
+                            .frame(width: imageFrame.width, height: imageFrame.height)
+                            .position(
+                                x: imageFrame.midX,
+                                y: imageFrame.midY
+                            )
                     }
                 }
             }
