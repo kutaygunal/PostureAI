@@ -150,11 +150,12 @@ class EnhancedPostureAnalyzer {
         let hipForwardPx = hipPos != nil ? abs(Double(hipPos!.x) - verticalLineX) : 0
         let kneeForwardPx = kneePos != nil ? abs(Double(kneePos!.x) - verticalLineX) : 0
         
-        // Convert to cm
-        let headForwardCm = headForwardPx * pixelToCmRatio / 100 // normalized to cm
-        let shoulderForwardCm = shoulderForwardPx * pixelToCmRatio / 100
-        let hipForwardCm = hipForwardPx * pixelToCmRatio / 100
-        let kneeForwardCm = kneeForwardPx * pixelToCmRatio / 100
+        // Convert to cm using deviation line calculations
+        // Deviation is the horizontal distance from ideal plumb line to actual body part
+        let headForwardCm = headForwardPx * pixelToCmRatio
+        let shoulderForwardCm = shoulderForwardPx * pixelToCmRatio
+        let hipForwardCm = hipForwardPx * pixelToCmRatio
+        let kneeForwardCm = kneeForwardPx * pixelToCmRatio
         
         // Calculate tilt angles relative to vertical
         // Negative = backward, Positive = forward

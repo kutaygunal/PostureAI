@@ -352,6 +352,23 @@ struct EnhancedReportView: View {
                 : "Good knee alignment"
         ))
         
+        // Total Forward Deviation Summary
+        let totalDeviation = side.headForwardCm + side.shoulderForwardCm + side.hipForwardCm + side.kneeForwardCm
+        let avgDeviation = totalDeviation / 4.0
+        let overallStatus: OffsetStatus = {
+            if avgDeviation < 2.5 { return .good }
+            else if avgDeviation < 5.0 { return .mild }
+            else { return .severe }
+        }()
+        
+        metrics.append(PostureMetric(
+            title: "Total Forward Deviation",
+            value: String(format: "%.1f cm", totalDeviation),
+            status: overallStatus,
+            icon: "ruler",
+            description: "Combined forward deviation of all body parts from ideal vertical line. Average: \(String(format: "%.1f", avgDeviation))cm per part."
+        ))
+        
         return metrics
     }
     

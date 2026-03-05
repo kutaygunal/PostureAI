@@ -174,8 +174,8 @@ struct SideAnalysisOverlay: View {
             }
             .stroke(deviationLineColor, lineWidth: 2)
             
-            // Distance label for significant deviations
-            if value > 0.3 {
+            // Distance label for significant deviations (show if > 0.5cm)
+            if value > 0.5 {
                 Text(String(format: "%.1f cm", value))
                     .font(.system(size: 11, weight: .bold))
                     .foregroundColor(.white)
