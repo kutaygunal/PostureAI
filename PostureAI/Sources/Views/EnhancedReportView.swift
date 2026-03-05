@@ -16,7 +16,7 @@ struct EnhancedReportView: View {
     @State private var headerOpacity: Double = 0
     @State private var cardsOffset: CGFloat = 50
     @State private var cardsOpacity: Double = 0
-    @State private var overallScore: Int = 75
+    @State private var overallScore: Int = 0
 
     // Analysis metrics
     @State private var sideMetrics: SidePostureMetrics?
@@ -47,6 +47,7 @@ struct EnhancedReportView: View {
 
                 // Overall Score Card
                 OverallScoreCard(score: overallScore)
+                    .id(overallScore) // Force recreation when score changes so onAppear runs with new value
                     .offset(y: cardsOffset)
                     .opacity(cardsOpacity)
 
@@ -83,9 +84,8 @@ struct EnhancedReportView: View {
             }
             .padding(.horizontal, 16)
             .onAppear {
-                // Calculate metrics
-                calculateMetrics()
-                overallScore = calculateOverallScore()
+                // Calculate metrics and score synchronously
+                calculateAndSetScore()
 
                 withAnimation(.spring(response: 0.6, dampingFraction: 0.8).delay(0.1)) {
                     cardsOffset = 0
@@ -127,12 +127,80 @@ struct EnhancedReportView: View {
 
     // MARK: - Real Data Functions
 
-    private func calculateOverallScore() -> Int {
-        // Calculate score from real pose data using enhanced analyzer
-        guard let side = sideMetrics, let front = frontMetrics else {
-            return 75 // Default fallback
+    private func calculateAndSetScore() {
+        // Calculate metrics directly from appState poses
+        var newSideMetrics: SidePostureMetrics?
+        var newFrontMetrics: FrontPostureMetrics?
+        
+        // Debug: Check what poses are available
+        print("DEBUG: capturedSidePose exists = \(appState.capturedSidePose != nil)")
+        print("DEBUG: capturedFrontPose exists = \(appState.capturedFrontPose != nil)")
+        print("DEBUG: userHeightCm = \(appState.userHeightCm)")
+        
+        if let sidePose = appState.capturedSidePose {
+            newSideMetrics = EnhancedPostureAnalyzer.analyzeSidePose(
+                from: sidePose,
+                userHeightCm: appState.userHeightCm
+            )
+            sideMetrics = newSideMetrics
+            print("DEBUG: Side metrics calculated: headForward = \(newSideMetrics?.headForwardCm ?? -999)")
+        } else {
+            print("DEBUG: No side pose available")
         }
 
+        if let frontPose = appState.capturedFrontPose {
+            newFrontMetrics = EnhancedPostureAnalyzer.analyzeFrontPose(
+                from: frontPose,
+                userHeightCm: appState.userHeightCm
+            )
+            frontMetrics = newFrontMetrics
+            print("DEBUG: Front metrics calculated: shoulderTilt = \(newFrontMetrics?.shoulderTiltAngle ?? -999)")
+        } else {
+            print("DEBUG: No front pose available")
+        }
+        
+        // Calculate score with the fresh metrics (not relying on @State)
+        if let side = newSideMetrics, let front = newFrontMetrics {
+            overallScore = EnhancedPostureAnalyzer.calculateOverallScore(
+                sideMetrics: side,
+                frontMetrics: front
+            )
+            print("DEBUG: Score calculated = \(overallScore)")
+        } else {
+            // Calculate partial score if only one view available
+            if let side = newSideMetrics {
+                // Calculate score with side only (apply 50% weight)
+                let partialScore = min(100, max(0, Int((50.0 * (1.0 - side.headForwardCm / 5.0) + 25.0))))
+                overallScore = partialScore
+                print("DEBUG: Partial side-only score = \(overallScore)")
+            } else if let front = newFrontMetrics {
+                // Calculate score with front only  
+                let partialScore = min(100, max(0, Int((25.0 * (1.0 - abs(front.shoulderTiltAngle) / 2.0) + 25.0))))
+                overallScore = partialScore
+                print("DEBUG: Partial front-only score = \(overallScore)")
+            } else {
+                overallScore = 0
+                print("DEBUG: No poses available, score = 0")
+            }
+        }
+    }
+
+    private func calculateOverallScore() -> Int {
+        // Fallback: Calculate from appState directly
+        guard let sidePose = appState.capturedSidePose,
+              let frontPose = appState.capturedFrontPose else {
+            return 0
+        }
+        
+        let side = EnhancedPostureAnalyzer.analyzeSidePose(
+            from: sidePose,
+            userHeightCm: appState.userHeightCm
+        )
+        let front = EnhancedPostureAnalyzer.analyzeFrontPose(
+            from: frontPose,
+            userHeightCm: appState.userHeightCm
+        )
+        
         return EnhancedPostureAnalyzer.calculateOverallScore(
             sideMetrics: side,
             frontMetrics: front
@@ -550,17 +618,21 @@ struct OverallScoreCard: View {
 
     var scoreColor: Color {
         switch score {
-        case 80...100: return .green
-        case 60..<80: return .yellow
-        default: return .orange
+        case 90...100: return .green
+        case 75..<90: return Color(red: 0.3, green: 0.8, blue: 0.4)  // Light green
+        case 50..<75: return .yellow
+        case 25..<50: return .orange
+        default: return .red
         }
     }
 
     var scoreLabel: String {
         switch score {
-        case 80...100: return "Excellent"
-        case 60..<80: return "Good"
-        default: return "Needs Attention"
+        case 90...100: return "Excellent posture"
+        case 75..<90: return "Good posture"
+        case 50..<75: return "Moderate imbalance"
+        case 25..<50: return "Poor posture"
+        default: return "Severe posture issues"
         }
     }
 

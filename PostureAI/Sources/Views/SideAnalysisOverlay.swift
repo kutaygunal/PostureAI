@@ -166,31 +166,12 @@ struct SideAnalysisOverlay: View {
         let actualX = CGFloat(actual.x) * size.width
         let actualY = CGFloat(actual.y) * size.height
         
-        return ZStack {
-            // Horizontal deviation line connecting ideal plumb to actual body point
-            Path { path in
-                path.move(to: CGPoint(x: idealX, y: actualY))
-                path.addLine(to: CGPoint(x: actualX, y: actualY))
-            }
-            .stroke(deviationLineColor, lineWidth: 2)
-            
-            // Distance label for significant deviations (show if > 0.5cm)
-            if value > 0.5 {
-                Text(String(format: "%.1f cm", value))
-                    .font(.system(size: 11, weight: .bold))
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 6)
-                    .padding(.vertical, 3)
-                    .background(
-                        Capsule()
-                            .fill(deviationLineColor)
-                    )
-                    .position(
-                        x: (idealX + actualX) / 2,
-                        y: actualY - 18
-                    )
-            }
+        // Horizontal deviation line connecting ideal plumb to actual body point
+        return Path { path in
+            path.move(to: CGPoint(x: idealX, y: actualY))
+            path.addLine(to: CGPoint(x: actualX, y: actualY))
         }
+        .stroke(deviationLineColor, lineWidth: 2)
     }
     
     // MARK: - Labels

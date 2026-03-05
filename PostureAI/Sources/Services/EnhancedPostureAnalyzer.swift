@@ -409,40 +409,108 @@ class EnhancedPostureAnalyzer {
         sideMetrics: SidePostureMetrics,
         frontMetrics: FrontPostureMetrics
     ) -> Int {
-        var score = 100
+        // MARK: - Clinical Weighted Scoring System
+        // Total weights = 100
         
-        // Side view penalties
-        switch sideMetrics.headStatus {
-        case .mild: score -= 12
-        case .severe: score -= 25
-        default: break
+        // Frontal (degrees) - Perfect/Acceptable/Bad thresholds
+        let shoulderTiltPerfect: Double = 0.5
+        let shoulderTiltAcceptable: Double = 2.0
+        let hipTiltPerfect: Double = 0.5
+        let hipTiltAcceptable: Double = 2.0
+        let headTiltPerfect: Double = 1.0
+        let headTiltAcceptable: Double = 3.0
+        let spineCenterPerfect: Double = 0.5
+        let spineCenterAcceptable: Double = 2.0
+        
+        // Sagittal (cm) - Perfect/Acceptable/Bad thresholds
+        let headForwardPerfect: Double = 2.0
+        let headForwardAcceptable: Double = 5.0
+        let shoulderForwardPerfect: Double = 2.0
+        let shoulderForwardAcceptable: Double = 4.0
+        let hipForwardPerfect: Double = 3.0
+        let hipForwardAcceptable: Double = 6.0
+        let kneeForwardPerfect: Double = 3.0
+        let kneeForwardAcceptable: Double = 6.0
+        
+        // MARK: Calculate individual metric scores (0-1 scale)
+        
+        // Sagittal scores (forward posture) - higher weight
+        let headForwardScore = metricScore(
+            value: sideMetrics.headForwardCm,
+            perfect: headForwardPerfect,
+            acceptable: headForwardAcceptable
+        )
+        
+        let shoulderForwardScore = metricScore(
+            value: sideMetrics.shoulderForwardCm,
+            perfect: shoulderForwardPerfect,
+            acceptable: shoulderForwardAcceptable
+        )
+        
+        let hipForwardScore = metricScore(
+            value: sideMetrics.hipForwardCm,
+            perfect: hipForwardPerfect,
+            acceptable: hipForwardAcceptable
+        )
+        
+        let kneeForwardScore = metricScore(
+            value: sideMetrics.kneeForwardCm,
+            perfect: kneeForwardPerfect,
+            acceptable: kneeForwardAcceptable
+        )
+        
+        // Frontal scores (tilt/symmetry)
+        let shoulderTiltScore = metricScore(
+            value: abs(frontMetrics.shoulderTiltAngle),
+            perfect: shoulderTiltPerfect,
+            acceptable: shoulderTiltAcceptable
+        )
+        
+        let hipTiltScore = metricScore(
+            value: abs(frontMetrics.hipTiltAngle),
+            perfect: hipTiltPerfect,
+            acceptable: hipTiltAcceptable
+        )
+        
+        let headTiltScore = metricScore(
+            value: abs(frontMetrics.headTiltAngle),
+            perfect: headTiltPerfect,
+            acceptable: headTiltAcceptable
+        )
+        
+        let spineCenterScore = metricScore(
+            value: abs(frontMetrics.spineDeviationPx) / 100.0, // normalized to approximate cm
+            perfect: spineCenterPerfect,
+            acceptable: spineCenterAcceptable
+        )
+        
+        // MARK: Apply weights and calculate total
+        // Weights sum to 100
+        let totalScore = 
+            (headForwardScore * 30.0) +      // Head Forward: 30
+            (hipForwardScore * 20.0) +       // Hip Forward: 20
+            (kneeForwardScore * 10.0) +      // Knee Forward: 10
+            (shoulderForwardScore * 10.0) +  // Shoulder Forward: 10
+            (shoulderTiltScore * 10.0) +     // Shoulder Tilt: 10
+            (hipTiltScore * 8.0) +          // Hip Tilt: 8
+            (headTiltScore * 7.0) +          // Head Tilt: 7
+            (spineCenterScore * 5.0)         // Spine Center: 5
+        
+        return Int(max(0, min(100, totalScore)))
+    }
+    
+    /// Calculate individual metric score (0-1 scale)
+    /// - value: actual measured value
+    /// - perfect: threshold for perfect score (1.0)
+    /// - acceptable: threshold where score becomes 0
+    private static func metricScore(value: Double, perfect: Double, acceptable: Double) -> Double {
+        if value <= perfect {
+            return 1.0 // Perfect
+        } else if value >= acceptable {
+            return 0.0 // Bad
+        } else {
+            // Linear interpolation between perfect and acceptable
+            return 1.0 - (value - perfect) / (acceptable - perfect)
         }
-        
-        switch sideMetrics.shoulderStatus {
-        case .mild: score -= 10
-        case .severe: score -= 20
-        default: break
-        }
-        
-        switch sideMetrics.hipStatus {
-        case .mild: score -= 8
-        case .severe: score -= 15
-        default: break
-        }
-        
-        // Front view penalties
-        switch frontMetrics.shoulderStatus {
-        case .mild: score -= 8
-        case .severe: score -= 15
-        default: break
-        }
-        
-        switch frontMetrics.hipStatus {
-        case .mild: score -= 5
-        case .severe: score -= 12
-        default: break
-        }
-        
-        return max(0, min(100, score))
     }
 }
