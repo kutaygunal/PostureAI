@@ -23,9 +23,6 @@ struct SideAnalysisOverlay: View {
                 
                 // Draw deviation lines and measurements
                 drawDeviationLines(in: geo.size)
-                
-                // Draw labels
-                drawLabels(in: geo.size)
             }
         }
         .frame(width: imageSize.width, height: imageSize.height)
