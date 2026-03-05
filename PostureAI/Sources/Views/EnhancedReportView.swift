@@ -21,6 +21,10 @@ struct EnhancedReportView: View {
     // Analysis metrics
     @State private var sideMetrics: SidePostureMetrics?
     @State private var frontMetrics: FrontPostureMetrics?
+    
+    // Share report state
+    @StateObject private var reportData = PDFReportData()
+    @State private var showingShareSheet = false
 
     private let dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
@@ -76,10 +80,15 @@ struct EnhancedReportView: View {
                     .padding(.vertical, 8)
 
                 // Action Buttons
-                ActionButtonsSection {
-                    appState.reset()
-                    dismiss()
-                }
+                ActionButtonsSection(
+                    onScanAgain: {
+                        appState.reset()
+                        dismiss()
+                    },
+                    onShare: {
+                        generateAndShareReport()
+                    }
+                )
                 .padding(.bottom, 32)
             }
             .padding(.horizontal, 16)
@@ -106,6 +115,38 @@ struct EnhancedReportView: View {
             .ignoresSafeArea()
         )
         .navigationBarHidden(true)
+        .sheet(isPresented: $showingShareSheet, onDismiss: {
+            // Clean up temp file when sheet is dismissed
+            reportData.clear()
+        }) {
+            if let pdfURL = reportData.pdfURL {
+                ShareSheet(activityItems: [
+                    pdfURL
+                ]) { completed in
+                    showingShareSheet = false
+                }
+            } else {
+                // Handle error case
+                VStack(spacing: 20) {
+                    Image(systemName: "exclamationmark.triangle")
+                        .font(.system(size: 50))
+                        .foregroundColor(.orange)
+                    Text("Unable to generate report")
+                        .font(.headline)
+                    Text("Please try again")
+                        .font(.subheadline)
+                        .foregroundColor(.gray)
+                    Button("OK") {
+                        showingShareSheet = false
+                    }
+                    .padding()
+                    .background(Color.blue)
+                    .foregroundColor(.white)
+                    .cornerRadius(10)
+                }
+                .padding()
+            }
+        }
     }
     
     // MARK: - View Mode Section
@@ -556,6 +597,23 @@ struct EnhancedReportView: View {
     private func worseStatus(_ a: OffsetStatus, _ b: OffsetStatus) -> OffsetStatus {
         let severity: [OffsetStatus: Int] = [.good: 0, .neutral: 1, .mild: 2, .severe: 3]
         return severity[a]! >= severity[b]! ? a : b
+    }
+    
+    // MARK: - Share Report
+    
+    private func generateAndShareReport() {
+        // Generate the PDF report
+        reportData.generate(
+            score: overallScore,
+            sideMetrics: sideMetrics,
+            frontMetrics: frontMetrics,
+            sideImageURL: appState.capturedSideImageURL,
+            frontImageURL: appState.capturedFrontImageURL,
+            userHeightCm: appState.userHeightCm
+        )
+        
+        // Show the share sheet
+        showingShareSheet = true
     }
 }
 
@@ -1330,6 +1388,7 @@ struct RecommendationCard: View {
 
 struct ActionButtonsSection: View {
     let onScanAgain: () -> Void
+    let onShare: () -> Void
     @State private var primaryButtonScale: CGFloat = 1.0
     @State private var shareButtonScale: CGFloat = 1.0
 
@@ -1374,6 +1433,7 @@ struct ActionButtonsSection: View {
                 }
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                     shareButtonScale = 1.0
+                    onShare()
                 }
             }) {
                 HStack(spacing: 8) {
