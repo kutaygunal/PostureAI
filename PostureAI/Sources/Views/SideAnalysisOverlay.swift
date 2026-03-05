@@ -307,21 +307,6 @@ struct FrontAnalysisOverlay: View {
                 path.addLine(to: CGPoint(x: midX + length/2, y: midY))
             }
             .stroke(levelColor, style: StrokeStyle(lineWidth: 2, dash: [8, 4]))
-            
-            // Angle label
-            if abs(angle) > 0.5 {
-                let midX = (left.x + right.x) / 2
-                Text(String(format: "%.1f°", abs(angle)))
-                    .font(.system(size: 12, weight: .bold))
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(
-                        RoundedRectangle(cornerRadius: 6)
-                            .fill(abs(angle) > 5 ? Color.orange : Color.yellow)
-                    )
-                    .position(x: midX, y: midY - 20)
-            }
         }
     }
     
