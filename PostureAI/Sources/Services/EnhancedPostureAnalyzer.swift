@@ -260,13 +260,25 @@ class EnhancedPostureAnalyzer {
     // MARK: - Helper Functions
     
     private static func calculateBodyHeightNormalized(from pose: PoseData) -> Double {
+        // Get visible body extent and extrapolate to full body height
+        // Full body height = crown (top of head) to floor (bottom of foot)
+        // Visible in photo = approx nose to ankle (~85% of total height)
+        
         guard let nose = pose.joint(.nose)?.position,
               let leftAnkle = pose.joint(.leftAnkle)?.position,
               let rightAnkle = pose.joint(.rightAnkle)?.position else {
             return 1.0
         }
+        
         let ankleMidY = (Double(leftAnkle.y) + Double(rightAnkle.y)) / 2.0
-        return ankleMidY - Double(nose.y)
+        let visibleBodyHeight = ankleMidY - Double(nose.y)
+        
+        // Correction factor: visible body is ~85-88% of total height
+        // Missing: ~10cm nose-to-crown + ~12cm ankle-to-floor = ~22cm
+        // For typical person 170cm, visible = 148cm, factor = 170/148 = 1.15
+        let fullBodyCorrectionFactor = 1.15
+        
+        return visibleBodyHeight * fullBodyCorrectionFactor
     }
     
     private static func calculateMidpoint(_ a: CGPoint?, _ b: CGPoint?) -> CGPoint? {

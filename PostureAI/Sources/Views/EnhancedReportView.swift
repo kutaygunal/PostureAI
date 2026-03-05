@@ -626,65 +626,10 @@ struct EnhancedSideComparisonSection: View {
                 .padding(.horizontal, 4)
 
             // Image with analysis overlay
-            GeometryReader { geo in
-                ZStack {
-                    RoundedRectangle(cornerRadius: 16)
-                        .fill(Color.gray.opacity(0.2))
-
-                    // Calculate actual image frame for proper overlay positioning
-                    let imageFrame: CGRect
-                    if let url = sideImageURL,
-                       let imageData = try? Data(contentsOf: url),
-                       let uiImage = UIImage(data: imageData) {
-                        let imageSize = uiImage.size
-                        let container = geo.size
-                        let imageAspect = imageSize.width / imageSize.height
-                        let containerAspect = container.width / container.height
-                        
-                        // aspectRatio(contentMode: .fit) calculation
-                        let drawWidth: CGFloat
-                        let drawHeight: CGFloat
-                        if imageAspect > containerAspect {
-                            drawWidth = container.width
-                            drawHeight = container.width / imageAspect
-                        } else {
-                            drawHeight = container.height
-                            drawWidth = container.height * imageAspect
-                        }
-                        
-                        let drawX = (container.width - drawWidth) / 2
-                        let drawY = (container.height - drawHeight) / 2
-                        imageFrame = CGRect(x: drawX, y: drawY, width: drawWidth, height: drawHeight)
-                        
-                        Image(uiImage: uiImage)
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .clipShape(RoundedRectangle(cornerRadius: 16))
-                    } else {
-                        imageFrame = CGRect(origin: .zero, size: geo.size)
-                        VStack(spacing: 8) {
-                            Image(systemName: "person.fill")
-                                .font(.system(size: 40))
-                                .foregroundColor(.gray)
-                            Text("No Image")
-                                .foregroundColor(.gray)
-                        }
-                    }
-
-                    // Enhanced analysis overlay - using actual image frame
-                    if let metrics = metrics, metrics.hasValidData {
-                        SideAnalysisOverlay(
-                            metrics: metrics,
-                            imageSize: imageFrame.size
-                        )
-                        .frame(width: imageFrame.width, height: imageFrame.height)
-                        .position(
-                            x: imageFrame.midX,
-                            y: imageFrame.midY
-                        )
-                    }
-                }
-            }
+            SideImageWithOverlay(
+                imageURL: sideImageURL,
+                metrics: metrics
+            )
             .frame(height: 280)
             .clipShape(RoundedRectangle(cornerRadius: 16))
 
@@ -728,62 +673,10 @@ struct EnhancedFrontComparisonSection: View {
                 .padding(.horizontal, 4)
 
             // Image with analysis overlay
-            GeometryReader { geo in
-                ZStack {
-                    RoundedRectangle(cornerRadius: 16)
-                        .fill(Color.gray.opacity(0.2))
-
-                    // Calculate actual image frame for proper overlay positioning
-                    let imageFrame: CGRect
-                    if let url = frontImageURL,
-                       let imageData = try? Data(contentsOf: url),
-                       let uiImage = UIImage(data: imageData) {
-                        let imageSize = uiImage.size
-                        let container = geo.size
-                        let imageAspect = imageSize.width / imageSize.height
-                        let containerAspect = container.width / container.height
-                        
-                        // aspectRatio(contentMode: .fit) calculation
-                        let drawWidth: CGFloat
-                        let drawHeight: CGFloat
-                        if imageAspect > containerAspect {
-                            drawWidth = container.width
-                            drawHeight = container.width / imageAspect
-                        } else {
-                            drawHeight = container.height
-                            drawWidth = container.height * imageAspect
-                        }
-                        
-                        let drawX = (container.width - drawWidth) / 2
-                        let drawY = (container.height - drawHeight) / 2
-                        imageFrame = CGRect(x: drawX, y: drawY, width: drawWidth, height: drawHeight)
-                        
-                        Image(uiImage: uiImage)
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .clipShape(RoundedRectangle(cornerRadius: 16))
-                    } else {
-                        imageFrame = CGRect(origin: .zero, size: geo.size)
-                        VStack(spacing: 8) {
-                            Image(systemName: "person.fill")
-                                .font(.system(size: 40))
-                                .foregroundColor(.gray)
-                            Text("No Image")
-                                .foregroundColor(.gray)
-                        }
-                    }
-
-                    // Enhanced analysis overlay - using actual image frame
-                    if let metrics = metrics, metrics.hasValidData {
-                        FrontAnalysisOverlay(metrics: metrics)
-                            .frame(width: imageFrame.width, height: imageFrame.height)
-                            .position(
-                                x: imageFrame.midX,
-                                y: imageFrame.midY
-                            )
-                    }
-                }
-            }
+            FrontImageWithOverlay(
+                imageURL: frontImageURL,
+                metrics: metrics
+            )
             .frame(height: 280)
             .clipShape(RoundedRectangle(cornerRadius: 16))
 
@@ -1439,6 +1332,169 @@ struct PostureMetric: Identifiable {
     let status: OffsetStatus
     let icon: String
     let description: String
+}
+
+// MARK: - Helper Views for Image with Overlay
+
+struct SideImageWithOverlay: View {
+    let imageURL: URL?
+    let metrics: SidePostureMetrics?
+    
+    var body: some View {
+        GeometryReader { geo in
+            ZStack {
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(Color.gray.opacity(0.2))
+                
+                ImageContent(
+                    imageURL: imageURL,
+                    metrics: metrics,
+                    containerSize: geo.size
+                )
+            }
+        }
+    }
+}
+
+struct FrontImageWithOverlay: View {
+    let imageURL: URL?
+    let metrics: FrontPostureMetrics?
+    
+    var body: some View {
+        GeometryReader { geo in
+            ZStack {
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(Color.gray.opacity(0.2))
+                
+                FrontImageContent(
+                    imageURL: imageURL,
+                    metrics: metrics,
+                    containerSize: geo.size
+                )
+            }
+        }
+    }
+}
+
+struct ImageContent: View {
+    let imageURL: URL?
+    let metrics: SidePostureMetrics?
+    let containerSize: CGSize
+    
+    var body: some View {
+        ZStack {
+            if let url = imageURL,
+               let imageData = try? Data(contentsOf: url),
+               let uiImage = UIImage(data: imageData) {
+                let imageFrame = calculateImageFrame(uiImage: uiImage, containerSize: containerSize)
+                
+                Image(uiImage: uiImage)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                
+                if let metrics = metrics, metrics.hasValidData {
+                    SideAnalysisOverlay(
+                        metrics: metrics,
+                        imageSize: imageFrame.size
+                    )
+                    .frame(width: imageFrame.width, height: imageFrame.height)
+                    .position(
+                        x: imageFrame.midX,
+                        y: imageFrame.midY
+                    )
+                }
+            } else {
+                VStack(spacing: 8) {
+                    Image(systemName: "person.fill")
+                        .font(.system(size: 40))
+                        .foregroundColor(.gray)
+                    Text("No Image")
+                        .foregroundColor(.gray)
+                }
+            }
+        }
+    }
+    
+    private func calculateImageFrame(uiImage: UIImage, containerSize: CGSize) -> CGRect {
+        let imageSize = uiImage.size
+        let imageAspect = imageSize.width / imageSize.height
+        let containerAspect = containerSize.width / containerSize.height
+        
+        let drawWidth: CGFloat
+        let drawHeight: CGFloat
+        if imageAspect > containerAspect {
+            drawWidth = containerSize.width
+            drawHeight = containerSize.width / imageAspect
+        } else {
+            drawHeight = containerSize.height
+            drawWidth = containerSize.height * imageAspect
+        }
+        
+        let drawX = (containerSize.width - drawWidth) / 2
+        let drawY = (containerSize.height - drawHeight) / 2
+        
+        return CGRect(x: drawX, y: drawY, width: drawWidth, height: drawHeight)
+    }
+}
+
+struct FrontImageContent: View {
+    let imageURL: URL?
+    let metrics: FrontPostureMetrics?
+    let containerSize: CGSize
+    
+    var body: some View {
+        ZStack {
+            if let url = imageURL,
+               let imageData = try? Data(contentsOf: url),
+               let uiImage = UIImage(data: imageData) {
+                let imageFrame = calculateImageFrame(uiImage: uiImage, containerSize: containerSize)
+                
+                Image(uiImage: uiImage)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                
+                if let metrics = metrics, metrics.hasValidData {
+                    FrontAnalysisOverlay(metrics: metrics)
+                        .frame(width: imageFrame.width, height: imageFrame.height)
+                        .position(
+                            x: imageFrame.midX,
+                            y: imageFrame.midY
+                        )
+                }
+            } else {
+                VStack(spacing: 8) {
+                    Image(systemName: "person.fill")
+                        .font(.system(size: 40))
+                        .foregroundColor(.gray)
+                    Text("No Image")
+                        .foregroundColor(.gray)
+                }
+            }
+        }
+    }
+    
+    private func calculateImageFrame(uiImage: UIImage, containerSize: CGSize) -> CGRect {
+        let imageSize = uiImage.size
+        let imageAspect = imageSize.width / imageSize.height
+        let containerAspect = containerSize.width / containerSize.height
+        
+        let drawWidth: CGFloat
+        let drawHeight: CGFloat
+        if imageAspect > containerAspect {
+            drawWidth = containerSize.width
+            drawHeight = containerSize.width / imageAspect
+        } else {
+            drawHeight = containerSize.height
+            drawWidth = containerSize.height * imageAspect
+        }
+        
+        let drawX = (containerSize.width - drawWidth) / 2
+        let drawY = (containerSize.height - drawHeight) / 2
+        
+        return CGRect(x: drawX, y: drawY, width: drawWidth, height: drawHeight)
+    }
 }
 
 #Preview {
